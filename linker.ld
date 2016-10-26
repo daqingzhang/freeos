@@ -1,4 +1,4 @@
-OUTPUT_FORMAT("elf32-littearm","elf32-littearm","elf32-littearm")
+OUTPUT_FORMAT("elf32-littlearm","elf32-littlearm","elf32-littlearm")
 OUTPUT_ARCH(arm)
 ENTRY(_start)
 
@@ -8,19 +8,19 @@ MEMORY
 	flash (rx) : o = 0x08000000, l = 0x1f800 /* 126K FLASH */
 }
 
-ASSERT(ORIGIN(flash) == ALIGN(ORIGIN(FLASH), 0x80), "ERROR: flash memory is not aligned !");
+ASSERT(ORIGIN(flash) == ALIGN(ORIGIN(flash), 0x80), "ERROR: flash memory is not aligned !");
 
 SECTIONS
 {
 	.text : {
 		__isr_vectors_offs__ = . - 0x08000000;
-		lib/core/startup/startup.o	(.text)
+		lib/core/startup/startup_stm.o	(.text)
 		. = ALIGN(4);
 		lib/board/stm/source/*		(.text) /* objects */
 		*(.text .text.*)
 		. = ALIGN(4);
 	} >flash
-
+	__text_end__ = . ;
 	.rodata : {
 		*(SORT_BY_ALIGNMENT(SORT_BY_NAME(.rodata*)))
 		. = ALIGN(4);
@@ -28,25 +28,25 @@ SECTIONS
 	__flash_end__ = . ;
 
 	.data : {
-		__start_data__ = . ;
+		__data_start__ = . ;
 		. = ALIGN(4);
 
 		*(.data .data.*)
 		*(.ram)
 		*(.ramfunc*)
 		. = ALIGN(4);
-		__end_data__ . ;
+		__data_end__ = . ;
 	} >ram AT>flash
 
 	.bss (NOLOAD) : {
-		__start_bss__ = . ;
+		__bss_start__ = . ;
 		*(.shbss)
 		*(.bss .bss.*)
 		*(COMMON)
 		. = ALIGN(8);
 		*(.ram.b)
 		. = ALIGN(4);
-		__end_bss__ = . ;
+		__bss_end__ = . ;
 	} >ram AT>flash
 
 	__ram_end__ = . ;

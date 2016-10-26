@@ -14,6 +14,6 @@ stm:
 	$(MAKE) -f Makefile.boot_stm TOP_DIR=$(ABS_TOP_DIR)
 
 clean:
-	$(MAKE) -f Makefile.stm TOP_DIR=$(ABS_TOP_DIR) clean
+	$(MAKE) -f Makefile.boot_stm TOP_DIR=$(ABS_TOP_DIR) clean
 
 .PHONY: stm clean

@@ -1,24 +1,22 @@
 PREFIX		:= arm_cm
-MACHINE		:= stm32f103rbt
+MACHINE		:= stm
 
 #==============================================================================
 # DIRECTORY
 #==============================================================================
-OUT_DIR		:= $(TOP_DIR)/out
+OUT_DIR 	:= $(TOP_DIR)/out
 OUTLIB_DIR	:= $(OUT_DIR)/lib
 OUTAPP_DIR	:= $(OUT_DIR)/app
 OUTOS_DIR	:= $(OUT_DIR)/os
 
-LIB_DIR 	:= $(TOP_DIR)/lib
-LIBBOARD_DIR	:= $(LIB_DIR)/board/$(MACHINE)
-LIBBOARD_SRC_DIR:= $(LIBBOARD_DIR)/source
-LIBBOARD_INC_DIR:= $(LIBBOARD_DIR)/include
-
-LIBCORE_DIR	:= $(LIB_DIR)/core
-LIBCORE_INC_DIR	:= $(LIBCORE_DIR)/$(PREFIX)
-LIBCORE_SRC_DIR	:= $(LIBCORE_DIR)/startup
+LIBBOARD_INC_DIR:= lib/board/$(MACHINE)/include
+LIBCORE_INC_DIR	:= lib/core/$(PREFIX)
+LIB_INC_DIR	:= lib/include
+LIBBOARD_SRC_DIR:= lib/board/$(MACHINE)/source
+LIBCORE_SRC_DIR	:= lib/core/startup
 
 LIB_INCS	:= -I$(LIBCORE_INC_DIR)
+LIB_INCS	+= -I$(LIB_INC_DIR)
 LIB_INCS	+= -I$(LIBBOARD_INC_DIR)
 
 #==============================================================================
@@ -46,39 +44,45 @@ GDB	:= $(TC)-gdb
 OBJCOPY := $(TC)-objcopy
 OBJDUMP := $(TC)-objdump
 
-CC_OPTS		:= -g -mthumb -mcpu=cortex-m3 -march=armv7-m3 -O0 -Wall -static -fno-common -fno-builtin-printf -m32
+CC_OPTS		:= -g -mthumb -mcpu=cortex-m3 -march=armv7-m
+CC_OPTS		+= -O0 -Wall -static -fno-common -fno-builtin-printf
+
 LD_OPTS		:= -T linker.ld $(LIB_INCS)
 LD_OPTS		+= -nostdlib -nostartfiles -ffast-math -lgcc -Wl,-Map=$(TARGET_MAP)
-OBJDUMP_OPTS	:= --disassemble-all --disassemble-zeros --section=.text --section=.test.startup --section=.data
+
+OBJDUMP_OPTS	:= --disassemble-all
+OBJDUMP_OTPS	+= --section=.text --section=.test.startup --section=.data
 
 #==============================================================================
 # MACRO DEFINITIONS
 #==============================================================================
 TARGET_DEFS	:= -DHOST_DEBUG=1
-
+TARGET_DEFS	+= -DSTM32F10X_MD
 
 #==============================================================================
 # OBJECTS & SOURCE FILES
 #==============================================================================
 #include srcs_boot_stm.mk
 A_OBJS := \
-	./$(LIBCORE_SRC_DIR)/startup.o
+	./$(LIBCORE_SRC_DIR)/startup_stm.o
 
 C_OBJS := \
-	./$(LIBBOARD_SRC_DIR)/misc.o
-	./$(LIBBOARD_SRC_DIR)/system_stm32f10x.o
-	./$(LIBBOARD_SRC_DIR)/stm32f10x_gpio.o
-	./$(LIBBOARD_SRC_DIR)/stm32f10x_tim.o
-	./$(LIBBOARD_SRC_DIR)/stm32f10x_i2c.o
-	./$(LIBBOARD_SRC_DIR)/stm32f10x_usart.o
-	./$(LIBBOARD_SRC_DIR)/stm32f10x_rcc.o
-	./$(LIBBOARD_SRC_DIR)/stm32f10x_flash.o
+	./$(LIBBOARD_SRC_DIR)/misc.o	\
+	./$(LIBBOARD_SRC_DIR)/system_stm32f10x.o	\
+	./$(LIBBOARD_SRC_DIR)/stm32f10x_gpio.o	\
+	./$(LIBBOARD_SRC_DIR)/stm32f10x_tim.o	\
+	./$(LIBBOARD_SRC_DIR)/stm32f10x_i2c.o	\
+	./$(LIBBOARD_SRC_DIR)/stm32f10x_usart.o	\
+	./$(LIBBOARD_SRC_DIR)/stm32f10x_rcc.o	\
+	./$(LIBBOARD_SRC_DIR)/stm32f10x_flash.o	\
 	./$(LIBBOARD_SRC_DIR)/stm32f10x_pwr.o
 
 #==============================================================================
 # SECTIONS
 #==============================================================================
 all: $(TARGET_BIN_DUMP) $(TARGET_HEX_DUMP) $(TARGET_ELF_DUMP)
+	mv $(LIBBOARD_SRC_DIR)/*.o $(OUTLIB_DIR)
+	mv $(LIBCORE_SRC_DIR)/*.o $(OUTLIB_DIR)
 	@echo "Build done !"
 
 $(TARGET_BIN_DUMP): $(TARGET_BIN)
@@ -114,6 +118,8 @@ JUNK	:= $(TARGET_ELF) $(TARGET_BIN) $(TARGET_HEX) $(TARGET_MAP) \
 
 clean:
 	rm -rf $(JUNK)
+	rm -f  $(LIBBOARD_SRC_DIR)/*.o
+	rm -f  $(LIBCORE_SRC_DIR)/*.o
 	rm -f  $(OUTLIB_DIR)/*.o
 	rm -f  $(OUTAPP_DIR)/*.o
 	rm -f  $(OUTOS_DIR)/*.o

@@ -1,0 +1,11 @@
+*.bin
+*.hex
+*.elf
+*.map
+*.bin.dump
+*.hex.dump
+*.elf.dump
+*.symbols
+out
+
+

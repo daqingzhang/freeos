@@ -39,6 +39,7 @@
 #ifndef __SYSTEM_STM32F10X_H
 #define __SYSTEM_STM32F10X_H
 
+#define assert_param(...) do{} while(0)
 #ifdef __cplusplus
  extern "C" {
 #endif 
