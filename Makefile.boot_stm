@@ -1,0 +1,120 @@
+PREFIX		:= arm_cm
+MACHINE		:= stm32f103rbt
+
+#==============================================================================
+# DIRECTORY
+#==============================================================================
+OUT_DIR		:= $(TOP_DIR)/out
+OUTLIB_DIR	:= $(OUT_DIR)/lib
+OUTAPP_DIR	:= $(OUT_DIR)/app
+OUTOS_DIR	:= $(OUT_DIR)/os
+
+LIB_DIR 	:= $(TOP_DIR)/lib
+LIBBOARD_DIR	:= $(LIB_DIR)/board/$(MACHINE)
+LIBBOARD_SRC_DIR:= $(LIBBOARD_DIR)/source
+LIBBOARD_INC_DIR:= $(LIBBOARD_DIR)/include
+
+LIBCORE_DIR	:= $(LIB_DIR)/core
+LIBCORE_INC_DIR	:= $(LIBCORE_DIR)/$(PREFIX)
+LIBCORE_SRC_DIR	:= $(LIBCORE_DIR)/startup
+
+LIB_INCS	:= -I$(LIBCORE_INC_DIR)
+LIB_INCS	+= -I$(LIBBOARD_INC_DIR)
+
+#==============================================================================
+# TARGET FILES
+#==============================================================================
+TARGET		:= test
+TARGET_ELF	:= $(TARGET).elf
+TARGET_BIN	:= $(TARGET).bin
+TARGET_HEX	:= $(TARGET).hex
+TARGET_MAP	:= $(TARGET).map
+TARGET_SYM	:= $(TARGET).symbols
+TARGET_ELF_DUMP := $(TARGET_ELF).dump
+TARGET_BIN_DUMP := $(TARGET_BIN).dump
+TARGET_HEX_DUMP := $(TARGET_HEX).dump
+
+#==============================================================================
+# COMPILER
+#==============================================================================
+TC	:= arm-none-eabi
+CC	:= $(TC)-gcc
+LD	:= $(TC)-ld
+AS	:= $(TC)-as
+AR	:= $(TC)-ar
+GDB	:= $(TC)-gdb
+OBJCOPY := $(TC)-objcopy
+OBJDUMP := $(TC)-objdump
+
+CC_OPTS		:= -g -mthumb -mcpu=cortex-m3 -march=armv7-m3 -O0 -Wall -static -fno-common -fno-builtin-printf -m32
+LD_OPTS		:= -T linker.ld $(LIB_INCS)
+LD_OPTS		+= -nostdlib -nostartfiles -ffast-math -lgcc -Wl,-Map=$(TARGET_MAP)
+OBJDUMP_OPTS	:= --disassemble-all --disassemble-zeros --section=.text --section=.test.startup --section=.data
+
+#==============================================================================
+# MACRO DEFINITIONS
+#==============================================================================
+TARGET_DEFS	:= -DHOST_DEBUG=1
+
+
+#==============================================================================
+# OBJECTS & SOURCE FILES
+#==============================================================================
+#include srcs_boot_stm.mk
+A_OBJS := \
+	./$(LIBCORE_SRC_DIR)/startup.o
+
+C_OBJS := \
+	./$(LIBBOARD_SRC_DIR)/misc.o
+	./$(LIBBOARD_SRC_DIR)/system_stm32f10x.o
+	./$(LIBBOARD_SRC_DIR)/stm32f10x_gpio.o
+	./$(LIBBOARD_SRC_DIR)/stm32f10x_tim.o
+	./$(LIBBOARD_SRC_DIR)/stm32f10x_i2c.o
+	./$(LIBBOARD_SRC_DIR)/stm32f10x_usart.o
+	./$(LIBBOARD_SRC_DIR)/stm32f10x_rcc.o
+	./$(LIBBOARD_SRC_DIR)/stm32f10x_flash.o
+	./$(LIBBOARD_SRC_DIR)/stm32f10x_pwr.o
+
+#==============================================================================
+# SECTIONS
+#==============================================================================
+all: $(TARGET_BIN_DUMP) $(TARGET_HEX_DUMP) $(TARGET_ELF_DUMP)
+	@echo "Build done !"
+
+$(TARGET_BIN_DUMP): $(TARGET_BIN)
+	xxd $< > $@
+
+$(TARGET_HEX_DUMP): $(TARGET_HEX)
+	hexdump $< > $@
+
+$(TARGET_ELF_DUMP): $(TARGET_ELF)
+	$(OBJDUMP) $(OBJDUMP_OPTS) $< > $@
+	$(OBJDUMP) -t $< > $(TARGET_SYM)
+	$(OBJDUMP) -h $<
+
+$(TARGET_BIN): $(TARGET_ELF)
+	$(OBJCOPY) -O binary $< $@
+
+$(TARGET_HEX): $(TARGET_ELF)
+	$(OBJCOPY) -O ihex $< $@
+
+$(TARGET_ELF): $(C_OBJS) $(A_OBJS)
+	$(CC) $^ -o $@ $(LD_OPTS)
+
+%.o: %.c
+	$(CC) $(CC_OPTS) $(TARGET_DEFS)	\
+		-c $(LIB_INCS) $< -o $@
+
+%.o: %.S
+	$(CC) $(CC_OPTS) $(TARGET_DEFS)	\
+		-c $(LIB_INCS) $< -o $@
+
+JUNK	:= $(TARGET_ELF) $(TARGET_BIN) $(TARGET_HEX) $(TARGET_MAP) \
+	$(TARGET_SYM) $(TARGET_ELF_DUMP) $(TARGET_BIN_DUMP) $(TARGET_HEX_DUMP)
+
+clean:
+	rm -rf $(JUNK)
+	rm -f  $(OUTLIB_DIR)/*.o
+	rm -f  $(OUTAPP_DIR)/*.o
+	rm -f  $(OUTOS_DIR)/*.o
+
