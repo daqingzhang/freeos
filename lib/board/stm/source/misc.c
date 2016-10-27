@@ -228,4 +228,8 @@ void SysTick_CLKSourceConfig(uint32_t SysTick_CLKSource)
   * @}
   */
 
+void do_interrupts(void)
+{
+
+}
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

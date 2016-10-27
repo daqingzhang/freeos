@@ -67,6 +67,7 @@ A_OBJS := \
 	./$(LIBCORE_SRC_DIR)/startup_stm.o
 
 C_OBJS := \
+	./lib/main.o \
 	./$(LIBBOARD_SRC_DIR)/misc.o	\
 	./$(LIBBOARD_SRC_DIR)/system_stm32f10x.o	\
 	./$(LIBBOARD_SRC_DIR)/stm32f10x_gpio.o	\
