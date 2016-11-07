@@ -1,10 +1,13 @@
-PATH_ARMGCC_BIN=~/gcc-arm-none-eabi-5_3-2016q1/bin
-PATH_ARMGCC_LIB=~/
+#PATH_ARMGCC_BIN=~/gcc-arm-none-eabi-5_3-2016q1/bin
+#PATH_ARMGCC_LIB=~/
 
-export LD_LIBRARY_PATH=$PATH_ARMGCC_LIB
-export PATH=$PATH:$PATH_ARMGCC_BIN
+FREEOS_TOP_DIR=$(pwd)
 
-armgccenv()
+#export LD_LIBRARY_PATH=$PATH_ARMGCC_LIB
+#export PATH=$PATH:$PATH_ARMGCC_BIN
+export FREEOSDIR=$FREEOS_TOP_DIR
+
+freeos_env()
 {
 	echo
 	echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
@@ -12,4 +15,9 @@ armgccenv()
 	echo
 }
 
-armgccenv
+croot()
+{
+	cd $FREEOSDIR
+}
+
+#freeos_env

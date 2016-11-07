@@ -1,19 +1,20 @@
-ABS_TOP_DIR := /home/zhangdaqing/workspace/github/freeos
-REL_LIBDIR  := lib
-REL_APPDIR  := app
-REL_OSDIR   := os
-REL_OUTDIR  := out
-REL_OUTAPPDIR :=$(REL_OUTDIR)/app
-REL_OUTLIBDIR :=$(REL_OUTDIR)/lib
-REL_OUTOSDIR  :=$(REL_OUTDIR)/os
+ABS_TOP_DIR:=$(shell pwd)
+REL_APPDIR :=app
+REL_LIBDIR :=lib
+REL_OSDIR  :=os
+REL_OUTDIR :=out
 
-all: clean stm
+OUT_APPDIR :=$(REL_OUTDIR)/$(REL_APPDIR)
+OUT_LIBDIR :=$(REL_OUTDIR)/$(REL_LIBDIR)
+OUT_OSDIR  :=$(REL_OUTDIR)/$(REL_OSDIR)
 
-stm:
-	mkdir -p $(REL_OUTAPPDIR) $(REL_OUTLIBDIR) $(REL_OUTOSDIR)
+all: clean boot
+
+boot:
+	mkdir -p $(REL_OUTDIR) $(OUT_APPDIR) $(OUT_LIBDIR) $(OUT_OSDIR)
 	$(MAKE) -f Makefile.boot_stm TOP_DIR=$(ABS_TOP_DIR)
 
 clean:
 	$(MAKE) -f Makefile.boot_stm TOP_DIR=$(ABS_TOP_DIR) clean
 
-.PHONY: stm clean
+.PHONY: boot clean

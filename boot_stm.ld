@@ -4,8 +4,8 @@ ENTRY(_start)
 
 MEMORY
 {
-	ram (rw)   : o = 0x20000000, l = 0x5000  /* 20KB RAM */
 	flash (rx) : o = 0x08000000, l = 0x1f800 /* 126K FLASH */
+	ram   (rw) : o = 0x20000000, l = 0x5000  /* 20KB RAM */
 }
 
 ASSERT(ORIGIN(flash) == ALIGN(ORIGIN(flash), 0x80), "ERROR: flash memory is not aligned !");
@@ -14,9 +14,9 @@ SECTIONS
 {
 	.text : {
 		__isr_vectors_offs__ = . - 0x08000000;
-		lib/core/startup/startup_stm.o	(.text)
+		lib/core/arm/source/startup_stm.o	(.text)
 		. = ALIGN(4);
-		lib/board/stm/source/*		(.text) /* objects */
+		lib/board/stmf10x/source/*		(.text) /* objects */
 		*(.text .text.*)
 		. = ALIGN(4);
 	} >flash
