@@ -14,17 +14,19 @@ SECTIONS
 {
 	.text : {
 		__isr_vectors_offs__ = . - 0x08000000;
-		lib/core/arm/source/startup_stm.o	(.text)
-		. = ALIGN(4);
-		lib/board/stmf10x/source/*		(.text) /* objects */
+		lib/core/arm/startup_stm.o	(.text)
+		lib/core/arm/syscall.o		(.text)
+		lib/board/stmf10x/*		(.text) /* library objects */
 		*(.text .text.*)
 		. = ALIGN(4);
 	} >flash
 	__text_end__ = . ;
+
 	.rodata : {
 		*(SORT_BY_ALIGNMENT(SORT_BY_NAME(.rodata*)))
 		. = ALIGN(4);
 	} >flash
+	__rodata_end__ = . ;
 	__flash_end__ = . ;
 
 	.data : {
@@ -47,12 +49,20 @@ SECTIONS
 		*(.ram.b)
 		. = ALIGN(4);
 		__bss_end__ = . ;
-	} >ram AT>flash
-
+	} >ram
 	__ram_end__ = . ;
+
 	_end = . ;
 
-	/DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) }
+	/DISCARD/ : { *(.note.GNU-stack) }
+	/DISCARD/ : { *(.gnu_debuglink) }
+/*
+	/DISCARD/ : { *(.dynamic*) }
+	/DISCARD/ : { *(.dynstr*) }
+	/DISCARD/ : { *(.plt*) }
+	/DISCARD/ : { *(.interp*) }
+	/DISCARD/ : { *(.gnu*) }
+*/
 }
 
 ASSERT(__flash_end__ < (ORIGIN(flash) + LENGTH(flash)), "ERROR: no enough space for store code in FLASH !");

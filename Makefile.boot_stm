@@ -14,9 +14,9 @@ OUTOS_DIR	:= $(TOP_DIR)/$(OUTDIR)/$(OSDIR)
 APPINC		:= $(APPDIR)/include
 LIBINC		:= $(LIBDIR)/include
 LIB_INC_DIR	:= $(LIBDIR)/board/$(CHIP)/include
-LIB_SRC_DIR	:= $(LIBDIR)/board/$(CHIP)/source
+LIB_SRC_DIR	:= $(LIBDIR)/board/$(CHIP)
 CORE_INC_DIR	:= $(LIBDIR)/core/$(CORE)/include
-CORE_SRC_DIR	:= $(LIBDIR)/core/$(CORE)/source
+CORE_SRC_DIR	:= $(LIBDIR)/core/$(CORE)
 
 LIB_INCS	:= -I$(LIBINC)
 LIB_INCS	+= -I$(APPINC)
@@ -52,7 +52,8 @@ CC_OPTS		:= -g -mthumb -mcpu=cortex-m3 -march=armv7-m
 CC_OPTS		+= -O0 -Wall -static -fno-common -fno-builtin-printf
 
 LD_OPTS		:= -T boot_stm.ld $(LIB_INCS)
-LD_OPTS		+= -nostdlib -nostartfiles -ffast-math -lgcc -Wl,-Map=$(TARGET_MAP)
+LD_OPTS		+= -Wl,-nostdlib,--relax,-Map=$(TARGET_MAP),--gc-sections
+LD_OPTS		+= -nostartfiles -ffast-math -lgcc
 
 OBJDUMP_OPTS	:= --disassemble-all
 OBJDUMP_OTPS	+= --section=.text --section=.test.startup --section=.data
@@ -71,24 +72,26 @@ A_OBJS := \
 	./$(CORE_SRC_DIR)/startup_stm.o
 
 C_OBJS := \
-	./$(LIB_SRC_DIR)/misc.o	\
-	./$(LIB_SRC_DIR)/system_stm32f10x.o	\
-	./$(LIB_SRC_DIR)/stm32f10x_gpio.o	\
-	./$(LIB_SRC_DIR)/stm32f10x_tim.o	\
-	./$(LIB_SRC_DIR)/stm32f10x_i2c.o	\
-	./$(LIB_SRC_DIR)/stm32f10x_usart.o	\
-	./$(LIB_SRC_DIR)/stm32f10x_rcc.o	\
-	./$(LIB_SRC_DIR)/stm32f10x_flash.o	\
-	./$(LIB_SRC_DIR)/stm32f10x_pwr.o   \
+	./$(CORE_SRC_DIR)/syscall.o	\
 	./$(APPDIR)/main.o
+
+#./$(LIB_SRC_DIR)/misc.o		\
+#./$(LIB_SRC_DIR)/system_stm32f10x.o	\
+#./$(LIB_SRC_DIR)/stm32f10x_gpio.o	\
+#./$(LIB_SRC_DIR)/stm32f10x_tim.o	\
+#./$(LIB_SRC_DIR)/stm32f10x_i2c.o	\
+#./$(LIB_SRC_DIR)/stm32f10x_usart.o	\
+#./$(LIB_SRC_DIR)/stm32f10x_rcc.o	\
+#./$(LIB_SRC_DIR)/stm32f10x_flash.o	\
+#./$(LIB_SRC_DIR)/stm32f10x_pwr.o   	\
 
 #==============================================================================
 # SECTIONS
 #==============================================================================
 all: $(TARGET_BIN_DUMP) $(TARGET_HEX_DUMP) $(TARGET_ELF_DUMP)
-	mv $(LIB_SRC_DIR)/*.o $(OUTLIB_DIR)
-	mv $(CORE_SRC_DIR)/*.o $(OUTLIB_DIR)
-	mv $(APPDIR)/*.o $(OUTAPP_DIR)
+	mv -f $(CORE_SRC_DIR)/*.o $(OUTLIB_DIR)
+	mv -f $(APPDIR)/*.o $(OUTAPP_DIR)
+#	mv -f $(LIB_SRC_DIR)/*.o $(OUTLIB_DIR)
 	@echo "Build done !"
 
 $(TARGET_BIN_DUMP): $(TARGET_BIN)
