@@ -14,8 +14,9 @@ SECTIONS
 {
 	.text : {
 		__isr_vectors_offs__ = . - 0x08000000;
-		lib/core/arm/startup_stm.o	(.text)
-		lib/core/arm/syscall.o		(.text)
+		KEEP(lib/core/arm/startup_stm.o	(.text))
+		KEEP(lib/core/arm/core_op.o	(.text))
+		KEEP(lib/core/arm/syscall.o	(.text))
 		lib/board/stmf10x/*		(.text) /* library objects */
 		*(.text .text.*)
 		. = ALIGN(4);

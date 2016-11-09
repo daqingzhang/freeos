@@ -10,10 +10,7 @@ int array[10];
 
 int main(int argc, const char *argv[])
 {
+	c = 1 << a;
 
-	c = a + b;
-	d = d + c;
-	array[0] = d;
-
-	return 0;
+	return c;
 }

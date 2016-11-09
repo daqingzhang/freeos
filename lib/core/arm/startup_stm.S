@@ -128,14 +128,13 @@ clrbss_e:
 /*
  * Set CPU to SVC mode
  */
+/*
 	mrs	r0,apsr
 	bic	r0,r0,#0x1f
 	orr	r0,r0,#0xd3
-/*
- * Enable global interrupts
- */
  	bic	r0,r0,#0x80
 	msr	apsr_nzcvq,r0
+*/
 /*
  * Config AHB,APB,System clock
  */
@@ -273,26 +272,3 @@ Default_Handler:
 	irq_save_regs
 	bl	do_interrupts
 	irq_restore_regs
-
-/*
- * void core_irq_enable(void);
- */
-.global core_irq_enable
-core_irq_enable:
-	mrs	r0,apsr
-	bic	r0,r0,#0x80
-	msr	apsr_nzcvq,r0
-	isb
-	mov	pc,lr
-
-/*
- * void core_irq_disable(void);
- */
-.global core_irq_disable
-core_irq_disable:
-	mrs	r0,apsr
-	orr	r0,r0,#0x80
-	msr	apsr_nzcvq,r0
-	isb
-	mov	pc,lr
-

@@ -7,5 +7,6 @@
 *.elf.dump
 *.symbols
 out
+tools
 
 

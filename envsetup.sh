@@ -1,5 +1,5 @@
-PATH_ARMGCC_BIN=~/gcc-arm-none-eabi-5_4-2016q3/bin
 FREEOS_CUR_DIR=$(pwd)
+PATH_ARMGCC_BIN=$FREEOS_CUR_DIR/tools/gcc-arm-none-eabi/bin
 #PATH_ARMGCC_LIB=~/
 
 #export LD_LIBRARY_PATH=$PATH_ARMGCC_LIB
@@ -11,10 +11,10 @@ export FREEOS_CORE_DIR=$FREEOS_TOP_DIR/lib/core/arm
 print_freeos()
 {
 	echo
-	echo "PATH=$PATH"
 	echo "FREEOS_TOP_DIR=$FREEOS_TOP_DIR"
 	echo "FREEOS_BOARD_DIR=$FREEOS_BOARD_DIR"
 	echo "FREEOS_CORE_DIR=$FREEOS_CORE_DIR"
+	echo "PATH=$PATH"
 	echo
 }
 
