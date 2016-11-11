@@ -4,7 +4,9 @@
  * EPSR: [24]-T
  */
 	.syntax	unified
-	.arch	armv7-m
+	.arch armv7-m
+/*	.cpu cortex-m3
+	.thumb*/
 
 .global __get_XPSR
 __get_XPSR:

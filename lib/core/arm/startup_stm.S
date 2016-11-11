@@ -2,6 +2,8 @@
 
 	.syntax	unified
 	.arch	armv7-m
+	.cpu cortex-m3
+	.thumb
 
 .globl	_start
 _start:
@@ -202,16 +204,16 @@ clrbss_e:
 	.endm
 #endif
 
-.global do_nmi
-.global do_hardfault
-.global do_memmanage
-.global do_busfault
-.global do_usagefault
-.global do_svc
-.global do_debugmon
-.global do_pendsv
-.global do_systick
-.global do_interrupts
+.weak do_nmi
+.weak do_hardfault
+.weak do_memmanage
+.weak do_busfault
+.weak do_usagefault
+.weak do_svc
+.weak do_debugmon
+.weak do_pendsv
+.weak do_systick
+.weak do_interrupts
 
 	.align	2
 NMI_Handler:
