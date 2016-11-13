@@ -8,7 +8,7 @@ export FREEOS_TOP_DIR=$FREEOS_CUR_DIR
 export FREEOS_BOARD_DIR=$FREEOS_TOP_DIR/lib/board/stm32f10x
 export FREEOS_CORE_DIR=$FREEOS_TOP_DIR/lib/core/arm
 
-print_freeos()
+freeosenv()
 {
 	echo
 	echo "FREEOS_TOP_DIR=$FREEOS_TOP_DIR"
@@ -33,4 +33,4 @@ cdcore()
 	cd $FREEOS_CORE_DIR
 }
 
-print_freeos
+freeosenv

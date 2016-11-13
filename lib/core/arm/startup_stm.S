@@ -1,11 +1,12 @@
 #define CONFIG_STACK_INIT_SP 0x20005000
 
 	.syntax	unified
-	.arch	armv7-m
+	.arch armv7-m
 	.cpu cortex-m3
 	.thumb
 
-.globl	_start
+	.align 2
+	.globl _start
 _start:
 	.long	CONFIG_STACK_INIT_SP  /* Top of Stack 	*/
 	.long	Reset_Handler         /* Reset Handler 	*/
@@ -51,18 +52,18 @@ _start:
 	.long	Default_Handler /* TIM1_UP_Handler	*/
 	.long	Default_Handler /* TIM1_TRG_COM_Handler	*/
 	.long	Default_Handler /* TIM1_CC_Handler	*/
-	.long	Default_Handler /* TIM2_Handler		*/
-	.long	Default_Handler /* TIM3_Handler		*/
-	.long	Default_Handler /* TIM4_Handler		*/
+	.long	TIM2_Handler	/* TIM2_Handler		*/
+	.long	TIM3_Handler	/* TIM3_Handler		*/
+	.long	TIM4_Handler	/* TIM4_Handler		*/
 	.long	Default_Handler /* I2C1_EV_Handler	*/
 	.long	Default_Handler /* I2C1_ER_Handler	*/
 	.long	Default_Handler /* I2C2_EV_Handler	*/
 	.long	Default_Handler /* I2C2_ER_Handler	*/
 	.long	Default_Handler /* SPI1_Handler		*/
 	.long	Default_Handler /* SPI2_Handler		*/
-	.long	Default_Handler /* USART1_Handler	*/
-	.long	Default_Handler /* USART2_Handler	*/
-	.long	Default_Handler /* USART3_Handler	*/
+	.long	USART1_Handler  /* USART1_Handler	*/
+	.long	USART2_Handler  /* USART2_Handler	*/
+	.long	USART3_Handler  /* USART3_Handler	*/
 	.long	Default_Handler /* EXTI15_10_Handler	*/
 	.long	Default_Handler /* RTC_ALARM_Handler	*/
 	.long	Default_Handler /* USB_WAKEUP_Handler	*/
@@ -73,19 +74,24 @@ _start:
 	.long	Default_Handler /* ADC3_Handler		*/
 	.long	Default_Handler /* FSMC_Handler		*/
 	.long	Default_Handler /* SDIO_Handler		*/
-	.long	Default_Handler /* TIM5_Handler		*/
+	.long	TIM5_Handler	/* TIM5_Handler		*/
 	.long	Default_Handler /* SPI3_Handler		*/
-	.long	Default_Handler /* UART4_Handler	*/
-	.long	Default_Handler /* UART5_Handler	*/
-	.long	Default_Handler /* TIM6_Handler		*/
-	.long	Default_Handler /* TIM7_Handler		*/
+	.long	USART4_Handler  /* UART4_Handler	*/
+	.long	USART5_Handler  /* UART5_Handler	*/
+	.long	TIM6_Handler	/* TIM6_Handler		*/
+	.long	TIM7_Handler	/* TIM7_Handler		*/
 	.long	Default_Handler /* DMA2_CH1_Handler	*/
 	.long	Default_Handler /* DMA2_CH2_Handler	*/
 	.long	Default_Handler /* DMA2_CH3_Handler	*/
 	.long	Default_Handler /* DMA2_CH4_CH5_Handler */
 
-	.align	9
+	.balignl 512,0xdeadbeef	/* addr is aligned multiple of 512 bytes, filled with long word 0xdeadbeef */
+	/*.balignw 512,0xdead*/ /* addr is aligned multiple of 512 bytes, filled with word 0xdead */
+	/*.align	9*/ 	/* addr is aligned 2^9 bytes, field with deafaut value 0 */
 
+	.align 2
+	.thumb_func
+	.type Reset_Handler, %function
 Reset_Handler:
 /*
  * Copy data to SRAM from FLASH
@@ -100,7 +106,7 @@ cpdata_s:
 	stmia	r2!,{r0}
 	b	cpdata_s
 cpdata_e:
-	mov	r0,#0x00000000
+	mov	r0,#0
 	mov	r3,r0
 	mov	r4,r0
 	mov	r5,r0
@@ -128,16 +134,6 @@ clrbss_e:
  */
 	ldr	sp, =((CONFIG_STACK_INIT_SP) & ~0x0007)
 /*
- * Set CPU to SVC mode
- */
-/*
-	mrs	r0,apsr
-	bic	r0,r0,#0x1f
-	orr	r0,r0,#0xd3
- 	bic	r0,r0,#0x80
-	msr	apsr_nzcvq,r0
-*/
-/*
  * Config AHB,APB,System clock
  */
 	mov	r0,#0
@@ -148,129 +144,41 @@ clrbss_e:
  * Jump into main
  */
 	bl	main
-/*
- * After returned from main, stop here
- */
+
 9:	nop
 	b	9b
 
-#if 0
-#define S_FRAME_SIZE	72
+	.align 2
+	.thumb_func
+	.type handle_deadloop, %function
+handle_deadloop:
+2:	nop
+	b	2b
 
-#define S_OLD_R0	68
-#define S_PSR		64
-#define S_PC		60
-#define S_LR		56
-#define S_SP		52
-#define S_IP		48
-#define S_FP		44
-#define S_R10		40
-#define S_R9		36
-#define S_R8		32
-#define S_R7		28
-#define S_R6		24
-#define S_R5		20
-#define S_R4		16
-#define S_R3		12
-#define S_R2		8
-#define S_R1		4
-#define S_R0		0
-
-	.macro irq_save_regs
-	sub	sp, sp, #S_FRAME_SIZE
-	stmia	sp, {r0-r12}
-	str	lr, [sp,#S_LR]
-	mrs	r0, cpsr
-	str	r0, [sp,#S_PSR]
+	.macro def_irq_handler handler_name
+	.weak	\handler_name
+	.set	\handler_name, handle_deadloop
 	.endm
 
-	.macro irq_restore_regs
-	ldr	r0, [sp,#S_PSR]
-	msr	cpsr,r0
-	ldr	lr, [sp,#S_LR]
-	ldmia	sp, [r0-r12]
-	add	sp, sp, #S_FRAME_SIZE
-	.endm
-#else
-	.macro irq_save_regs
-	/*
-	 * ARM CM3 can save IRQ frame into memory automatically.
-	 */
-	.endm
-	.macro irq_restore_regs
-	/*
-	 * Nothing to do
-	 */
-	.endm
-#endif
+	def_irq_handler NMI_Handler,
+	def_irq_handler HardFault_Handler,
+	def_irq_handler MemManage_Handler,
+	def_irq_handler BusFault_Handler,
+	def_irq_handler UsageFault_Handler,
+	def_irq_handler SVC_Handler,
+	def_irq_handler DebugMon_Handler,
+	def_irq_handler PendSV_Handler,
+	def_irq_handler SysTick_Handler,
+	def_irq_handler USART1_Handler,
+	def_irq_handler USART2_Handler,
+	def_irq_handler USART3_Handler,
+	def_irq_handler USART4_Handler,
+	def_irq_handler USART5_Handler,
+	def_irq_handler TIM2_Handler,
+	def_irq_handler TIM3_Handler,
+	def_irq_handler TIM4_Handler,
+	def_irq_handler TIM5_Handler,
+	def_irq_handler TIM6_Handler,
+	def_irq_handler TIM7_Handler,
+	def_irq_handler Default_Handler,
 
-.weak do_nmi
-.weak do_hardfault
-.weak do_memmanage
-.weak do_busfault
-.weak do_usagefault
-.weak do_svc
-.weak do_debugmon
-.weak do_pendsv
-.weak do_systick
-.weak do_interrupts
-
-	.align	2
-NMI_Handler:
-	irq_save_regs
-	bl	do_nmi
-	irq_restore_regs
-
-	.align	2
-HardFault_Handler:
-	irq_save_regs
-	bl	do_hardfault
-	irq_restore_regs
-
-	.align	2
-MemManage_Handler:
-	irq_save_regs
-	bl	do_memmanage
-	irq_restore_regs
-
-	.align	2
-BusFault_Handler:
-	irq_save_regs
-	bl	do_busfault
-	irq_restore_regs
-
-	.align	2
-UsageFault_Handler:
-	irq_save_regs
-	bl	do_usagefault
-	irq_restore_regs
-
-	.align	2
-SVC_Handler:
-	irq_save_regs
-	bl	do_svc
-	irq_restore_regs
-
-	.align	2
-DebugMon_Handler:
-	irq_save_regs
-	bl	do_debugmon
-	irq_restore_regs
-
-	.align	2
-PendSV_Handler:
-	irq_save_regs
-	bl	do_pendsv
-	irq_restore_regs
-
-	.align	2
-SysTick_Handler:
-	irq_save_regs
-	bl	do_systick
-	irq_restore_regs
-
-	.align	2
-Default_Handler:
-	irq_save_regs
-	bl	do_interrupts
-	irq_restore_regs

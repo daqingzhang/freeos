@@ -1,56 +1,47 @@
 #include <common.h>
 
-void do_nmi(void)
+void NMI_Handler(void)
 {
 
 }
 
-void do_hardfault(void)
+void HardFault_Handler(void)
 {
 
 }
 
-void do_memmanage(void)
+void MemManage_Handler(void)
 {
 
 }
 
-void do_busfault(void)
+void BusFault_Handler(void)
 {
 
 }
 
-void do_usagefault(void)
+void UsageFault_Handler(void)
 {
 
 }
 
-void do_svc(void)
+void SVC_Handler(void)
 {
 
 }
 
-void do_debugmon(void)
+void DebugMon_Handler(void)
 {
 
 }
 
-void do_pendsv(void)
+void PendSV_Handler(void)
 {
 
 }
 
-void do_systick(void)
+void SysTick_Handler(void)
 {
 
 }
 
-void do_interrupts(void)
-{
-
-}
-
-void board_init(void)
-{
-
-}
