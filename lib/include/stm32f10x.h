@@ -15,15 +15,15 @@
   *          is using in the C source code, usually in main.c. This file contains:
   *           - Configuration section that allows to select:
   *              - The device used in the target application
-  *              - To use or not the peripheral’s drivers in application code(i.e. 
-  *                code will be based on direct access to peripheral’s registers 
+  *              - To use or not the peripheralÂ’s drivers in application code(i.e. 
+  *                code will be based on direct access to peripheralÂ’s registers 
   *                rather than drivers API), this option is controlled by 
   *                "#define USE_STDPERIPH_DRIVER"
   *              - To change few application-specific parameters such as the HSE 
   *                crystal frequency
   *           - Data structures and the address mapping for all peripherals
   *           - Peripheral's registers declarations and bits definition
-  *           - Macros to access peripheral’s registers hardware
+  *           - Macros to access peripheralÂ’s registers hardware
   *
   ******************************************************************************
   * @attention
@@ -45,28 +45,8 @@
   ******************************************************************************
   */
 
-/** @addtogroup CMSIS
-  * @{
-  */
-
-/** @addtogroup stm32f10x
-  * @{
-  */
-    
 #ifndef __STM32F10x_H
 #define __STM32F10x_H
-
-#ifdef __cplusplus
- extern "C" {
-#endif /* __cplusplus */
-  
-/** @addtogroup Library_configuration_section
-  * @{
-  */
-  
-/* Uncomment the line below according to the target STM32 device used in your
-   application 
-  */
 
 #if !defined (STM32F10X_LD) && !defined (STM32F10X_LD_VL) && !defined (STM32F10X_MD) && !defined (STM32F10X_MD_VL) && !defined (STM32F10X_HD) && !defined (STM32F10X_HD_VL) && !defined (STM32F10X_XL) && !defined (STM32F10X_CL) 
   /* #define STM32F10X_LD */     /*!< STM32F10X_LD: STM32 Low density devices */
@@ -78,6 +58,7 @@
   /* #define STM32F10X_XL */     /*!< STM32F10X_XL: STM32 XL-density devices */
   /* #define STM32F10X_CL */     /*!< STM32F10X_CL: STM32 Connectivity line devices */
 #endif
+
 /*  Tip: To avoid modifying this file each time you need to switch between these
         devices, you can define the device in your toolchain compiler preprocessor.
 
@@ -98,65 +79,32 @@
  - Connectivity line devices are STM32F105xx and STM32F107xx microcontrollers.
   */
 
-#if !defined (STM32F10X_LD) && !defined (STM32F10X_LD_VL) && !defined (STM32F10X_MD) && !defined (STM32F10X_MD_VL) && !defined (STM32F10X_HD) && !defined (STM32F10X_HD_VL) && !defined (STM32F10X_XL) && !defined (STM32F10X_CL)
- #error "Please select first the target STM32F10x device used in your application (in stm32f10x.h file)"
-#endif
+#if !defined (STM32F10X_LD) && !defined (STM32F10X_LD_VL) \
+	&& !defined (STM32F10X_MD) && !defined (STM32F10X_MD_VL) && !defined (STM32F10X_HD) \
+	&& !defined (STM32F10X_HD_VL) && !defined (STM32F10X_XL) && !defined (STM32F10X_CL)
 
-#if !defined  (USE_STDPERIPH_DRIVER)
-/**
- * @brief Comment the line below if you will not use the peripherals drivers.
-   In this case, these drivers will not be included and the application code will 
-   be based on direct access to peripherals registers 
-   */
-  /*#define USE_STDPERIPH_DRIVER*/
-#endif /* USE_STDPERIPH_DRIVER */
+#error "Please select first the target STM32F10x device used in your application (in stm32f10x.h file)"
+#endif
 
 /**
  * @brief In the following line adjust the value of External High Speed oscillator (HSE)
-   used in your application 
-   
-   Tip: To avoid modifying this file each time you need to use different HSE, you
-        can define the HSE value in your toolchain compiler preprocessor.
-  */           
-#if !defined  HSE_VALUE
- #ifdef STM32F10X_CL   
-  #define HSE_VALUE    ((uint32_t)25000000) /*!< Value of the External oscillator in Hz */
- #else 
-  #define HSE_VALUE    ((uint32_t)8000000) /*!< Value of the External oscillator in Hz */
- #endif /* STM32F10X_CL */
-#endif /* HSE_VALUE */
+ * used in your application 
+ */           
+#ifndef HSE_VALUE
+#define HSE_VALUE    ((uint32_t)8000000)
+#endif
 
 /**
  * @brief In the following line adjust the External High Speed oscillator (HSE) Startup 
-   Timeout value 
-   */
+ * Timeout value 
+ */
 #if !defined  (HSE_STARTUP_TIMEOUT) 
-  #define HSE_STARTUP_TIMEOUT    ((uint16_t)0x0500)   /*!< Time out for HSE start up */
-#endif /* HSE_STARTUP_TIMEOUT */
+#define HSE_STARTUP_TIMEOUT    ((uint16_t)0x0500)
+#endif
 
 #if !defined  (HSI_VALUE)   
-  #define HSI_VALUE    ((uint32_t)8000000) /*!< Value of the Internal oscillator in Hz*/
-#endif /* HSI_VALUE */
-
-/**
- * @brief STM32F10x Standard Peripheral Library version number
-   */
-#define __STM32F10X_STDPERIPH_VERSION_MAIN   (0x03) /*!< [31:24] main version */
-#define __STM32F10X_STDPERIPH_VERSION_SUB1   (0x06) /*!< [23:16] sub1 version */
-#define __STM32F10X_STDPERIPH_VERSION_SUB2   (0x01) /*!< [15:8]  sub2 version */
-#define __STM32F10X_STDPERIPH_VERSION_RC     (0x00) /*!< [7:0]  release candidate */
-#define __STM32F10X_STDPERIPH_VERSION        ((__STM32F10X_STDPERIPH_VERSION_MAIN << 24)\
-                                             |(__STM32F10X_STDPERIPH_VERSION_SUB1 << 16)\
-                                             |(__STM32F10X_STDPERIPH_VERSION_SUB2 << 8)\
-                                             |(__STM32F10X_STDPERIPH_VERSION_RC))
-
-/**
-  * @}
-  */
-
-/** @addtogroup Configuration_section_for_CMSIS
-  * @{
-  */
+#define HSI_VALUE    ((uint32_t)8000000)
+#endif
 
 /**
  * @brief Configuration of the Cortex-M3 Processor and Core Peripherals 
@@ -481,19 +429,9 @@ typedef enum IRQn
 #endif /* STM32F10X_CL */     
 } IRQn_Type;
 
-/**
-  * @}
-  */
-
 #include <core_cm3.h>
-#include <system_stm32f10x.h>
 #include <stdint.h>
 
-/** @addtogroup Exported_types
-  * @{
-  */  
-
-/*!< STM32F10x Standard Peripheral Library old types (maintained for legacy purpose) */
 typedef signed int  s32;
 typedef signed short s16;
 typedef signed char  s8;
@@ -537,13 +475,6 @@ typedef enum {ERROR = 0, SUCCESS = !ERROR} ErrorStatus;
 #define HSEStartUp_TimeOut   HSE_STARTUP_TIMEOUT
 #define HSE_Value            HSE_VALUE
 #define HSI_Value            HSI_VALUE
-/**
-  * @}
-  */
-
-/** @addtogroup Peripheral_registers_structures
-  * @{
-  */   
 
 /** 
   * @brief Analog to Digital Converter  
@@ -1270,14 +1201,9 @@ typedef struct
   __IO uint32_t SR;
 } WWDG_TypeDef;
 
-/**
-  * @}
-  */
-  
 /** @addtogroup Peripheral_memory_map
   * @{
   */
-
 
 #define FLASH_BASE            ((uint32_t)0x08000000) /*!< FLASH base address in the alias region */
 #define SRAM_BASE             ((uint32_t)0x20000000) /*!< SRAM base address in the alias region */
@@ -1379,12 +1305,7 @@ typedef struct
 
 #define DBGMCU_BASE          ((uint32_t)0xE0042000) /*!< Debug MCU registers base address */
 
-/**
-  * @}
-  */
-  
 /** @addtogroup Peripheral_declaration
-  * @{
   */  
 
 #define TIM2                ((TIM_TypeDef *) TIM2_BASE)
@@ -1462,17 +1383,9 @@ typedef struct
 #define FSMC_Bank4          ((FSMC_Bank4_TypeDef *) FSMC_Bank4_R_BASE)
 #define DBGMCU              ((DBGMCU_TypeDef *) DBGMCU_BASE)
 
-/**
-  * @}
-  */
-
-/** @addtogroup Exported_constants
-  * @{
-  */
-  
-  /** @addtogroup Peripheral_Registers_Bits_Definition
-  * @{
-  */
+/** @addtogroup Peripheral_Registers_Bits_Definition
+* @{
+*/
     
 /******************************************************************************/
 /*                         Peripheral Registers_Bits_Definition               */
@@ -8337,20 +8250,7 @@ typedef struct
 #define ETH_DMACHRBAR_HRBAP  ((uint32_t)0xFFFFFFFF)  /* Host receive buffer address pointer */
 #endif /* STM32F10X_CL */
 
-/**
-  * @}
-  */
-
- /**
-  * @}
-  */ 
-
-#ifdef USE_STDPERIPH_DRIVER
-  #include "stm32f10x_conf.h"
-#endif
-
 /** @addtogroup Exported_macro
-  * @{
   */
 
 #define SET_BIT(REG, BIT)     ((REG) |= (BIT))
@@ -8367,22 +8267,4 @@ typedef struct
 
 #define MODIFY_REG(REG, CLEARMASK, SETMASK)  WRITE_REG((REG), (((READ_REG(REG)) & (~(CLEARMASK))) | (SETMASK)))
 
-/**
-  * @}
-  */
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
 #endif /* __STM32F10x_H */
-
-/**
-  * @}
-  */
-
-  /**
-  * @}
-  */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

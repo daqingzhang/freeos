@@ -1,5 +1,4 @@
-#include <stm32f10x.h>
-#include <misc.h>
+#include <stm32f10x_system.h>
 #include <common.h>
 
 const char *logo = "0x12345678abcd";
@@ -25,10 +24,11 @@ void board_init(void)
 	// init system clock
 
 	// init NVIC
-	NVIC_SetVectorTable(NVIC_VectTab_FLASH,0x0);
-	nvic_priority_group_config(NVIC_PRI_GRP4);
+	nvic_set_priority_group(NVIC_PRIORITY_GRP4);
+	nvic_set_vector_addr(NVIC_VECTOR_BASE_FLASH,0);
+
 	// init system tick
-	SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
+	systick_config(0x00FFFFFF);
 
 	// config pinmux & GPIO
 

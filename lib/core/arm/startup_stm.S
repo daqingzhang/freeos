@@ -85,17 +85,15 @@ _start:
 	.long	Default_Handler /* DMA2_CH3_Handler	*/
 	.long	Default_Handler /* DMA2_CH4_CH5_Handler */
 
-	.balignl 512,0xdeadbeef	/* addr is aligned multiple of 512 bytes, filled with long word 0xdeadbeef */
-	/*.balignw 512,0xdead*/ /* addr is aligned multiple of 512 bytes, filled with word 0xdead */
-	/*.align	9*/ 	/* addr is aligned 2^9 bytes, field with deafaut value 0 */
+	.balignl 512,0xdeadbeef	/* aligned multiple of 512 B, fill long word 0xdeadbeef */
+	/*.balignw 512,0xdead*/ /* aligned multiple of 512 B, fill word 0xdead */
+	/*.align	9*/ 	/* aligned 2^9 B, fill 0 */
 
 	.align 2
 	.thumb_func
 	.type Reset_Handler, %function
 Reset_Handler:
-/*
- * Copy data to SRAM from FLASH
- */
+	/* copy data to SRAM from FLASH */
 	ldr	r1, =__rodata_end__
 	ldr	r2, =__data_start__
 	ldr	r3, =__data_end__
@@ -106,7 +104,18 @@ cpdata_s:
 	stmia	r2!,{r0}
 	b	cpdata_s
 cpdata_e:
-	mov	r0,#0
+	/* clear BSS block */
+ 	mov	r0, #0x0
+	ldr	r1, =__bss_start__
+	ldr	r2, =__bss_end__
+clrbss_s:
+	cmp	r1, r2
+	beq	clrbss_e
+	stmia	r1!,{r0}
+	b clrbss_s
+clrbss_e:
+	mov	r1,r0
+	mov	r2,r0
 	mov	r3,r0
 	mov	r4,r0
 	mov	r5,r0
@@ -117,34 +126,17 @@ cpdata_e:
 	mov	r10,r0
 	mov	r11,r0
 	mov	r12,r0
-/*
- * Clear BSS block
- */
-	ldr	r1, =__bss_start__
-	ldr	r2, =__bss_end__
-clrbss_s:
-	cmp	r1, r2
-	beq	clrbss_e
-	stmia	r1!,{r0}
-	b clrbss_s
 
-clrbss_e:
-/*
- * Config stack pointer
- */
+	/* init sp,8 bytes aligned */
 	ldr	sp, =((CONFIG_STACK_INIT_SP) & ~0x0007)
-/*
- * Config AHB,APB,System clock
- */
-	mov	r0,#0
-	mov	r1,r0
-	mov	r2,r0
+
+	/* init AHB,APB,System clock */
 	bl	board_init
-/*
- * Jump into main
- */
+
+	/* Jump into main */
 	bl	main
 
+	/* jump into dead loop after returned from main */
 9:	nop
 	b	9b
 
@@ -152,33 +144,32 @@ clrbss_e:
 	.thumb_func
 	.type handle_deadloop, %function
 handle_deadloop:
-2:	nop
-	b	2b
+	nop
+	b	handle_deadloop
 
 	.macro def_irq_handler handler_name
 	.weak	\handler_name
 	.set	\handler_name, handle_deadloop
 	.endm
 
-	def_irq_handler NMI_Handler,
-	def_irq_handler HardFault_Handler,
-	def_irq_handler MemManage_Handler,
-	def_irq_handler BusFault_Handler,
-	def_irq_handler UsageFault_Handler,
-	def_irq_handler SVC_Handler,
-	def_irq_handler DebugMon_Handler,
-	def_irq_handler PendSV_Handler,
-	def_irq_handler SysTick_Handler,
-	def_irq_handler USART1_Handler,
-	def_irq_handler USART2_Handler,
-	def_irq_handler USART3_Handler,
-	def_irq_handler USART4_Handler,
-	def_irq_handler USART5_Handler,
-	def_irq_handler TIM2_Handler,
-	def_irq_handler TIM3_Handler,
-	def_irq_handler TIM4_Handler,
-	def_irq_handler TIM5_Handler,
-	def_irq_handler TIM6_Handler,
-	def_irq_handler TIM7_Handler,
-	def_irq_handler Default_Handler,
-
+	def_irq_handler NMI_Handler
+	def_irq_handler HardFault_Handler
+	def_irq_handler MemManage_Handler
+	def_irq_handler BusFault_Handler
+	def_irq_handler UsageFault_Handler
+	def_irq_handler SVC_Handler
+	def_irq_handler DebugMon_Handler
+	def_irq_handler PendSV_Handler
+	def_irq_handler SysTick_Handler
+	def_irq_handler USART1_Handler
+	def_irq_handler USART2_Handler
+	def_irq_handler USART3_Handler
+	def_irq_handler USART4_Handler
+	def_irq_handler USART5_Handler
+	def_irq_handler TIM2_Handler
+	def_irq_handler TIM3_Handler
+	def_irq_handler TIM4_Handler
+	def_irq_handler TIM5_Handler
+	def_irq_handler TIM6_Handler
+	def_irq_handler TIM7_Handler
+	def_irq_handler Default_Handler
