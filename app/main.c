@@ -20,15 +20,19 @@ int main(int argc, const char *argv[])
 void board_init(void)
 {
 	// disable global interrupts
+	__disable_irq();
 
 	// init system clock
+	system_init_clock();
 
-	// init NVIC
-	nvic_set_priority_group(NVIC_PRIORITY_GRP4);
-	nvic_set_vector_addr(NVIC_VECTOR_BASE_FLASH,0);
+	// set priority group
+	system_set_priority_group(NVIC_PRIORITY_GRP4);
 
-	// init system tick
-	systick_config(0x00FFFFFF);
+	// set vector address
+	system_set_vectaddr(NVIC_VECTOR_BASE_FLASH,0);
+
+	// config system tick
+	system_systick_config(0x00FFFFFF);
 
 	// config pinmux & GPIO
 
@@ -39,5 +43,6 @@ void board_init(void)
 
 	// config KEY
 
-	// Enable gloabl interrupts
+	// enable gloabl interrupts
+	__enable_irq();
 }
