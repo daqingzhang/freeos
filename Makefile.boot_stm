@@ -13,15 +13,18 @@ OUTOS_DIR	:= $(TOP_DIR)/$(OUTDIR)/$(OSDIR)
 
 APPINC		:= $(APPDIR)/include
 LIBINC		:= $(LIBDIR)/include
-LIB_INC_DIR	:= $(LIBDIR)/board/$(CHIP)/include
-LIB_SRC_DIR	:= $(LIBDIR)/board/$(CHIP)
-CORE_INC_DIR	:= $(LIBDIR)/core/$(CORE)/include
-CORE_SRC_DIR	:= $(LIBDIR)/core/$(CORE)
+LIB_BOARD_INC	:= $(LIBDIR)/board/$(CHIP)/include
+LIB_BOARD_SRC	:= $(LIBDIR)/board/$(CHIP)
+LIB_CORE_INC	:= $(LIBDIR)/core/$(CORE)/include
+LIB_CORE_SRC	:= $(LIBDIR)/core/$(CORE)
+OS_DEVICE_INC	:= $(OSDIR)/device/$(CHIP)/include
+OS_DEVICE_SRC	:= $(OSDIR)/device/$(CHIP)
 
 LIB_INCS	:= -I$(LIBINC)
 LIB_INCS	+= -I$(APPINC)
-LIB_INCS	+= -I$(LIB_INC_DIR)
-LIB_INCS	+= -I$(CORE_INC_DIR)
+LIB_INCS	+= -I$(LIB_BOARD_INC)
+LIB_INCS	+= -I$(LIB_CORE_INC)
+LIB_INCS	+= -I$(OS_DEVICE_INC)
 
 #==============================================================================
 # TARGET FILES
@@ -69,30 +72,31 @@ TARGET_DEFS	+= -DSTM32F10X_MD
 #==============================================================================
 
 A_OBJS := \
-	./$(CORE_SRC_DIR)/startup_stm.o \
-	./$(CORE_SRC_DIR)/core_op.o
+	./$(LIB_CORE_SRC)/startup_stm.o \
+	./$(LIB_CORE_SRC)/core_op.o
 
 C_OBJS := \
-	./$(CORE_SRC_DIR)/syscall.o	\
-	./$(LIB_SRC_DIR)/stm32f10x_system.o	\
-	./$(APPDIR)/main.o		\
+	./$(LIB_CORE_SRC)/syscall.o	\
+	./$(LIB_BOARD_SRC)/stm32f10x_system.o	\
+	./$(OS_DEVICE_SRC)/serial.o	\
+	./$(APPDIR)/main.o
 
-#./$(LIB_SRC_DIR)/system_stm32f10x.o	\
-#./$(LIB_SRC_DIR)/stm32f10x_gpio.o	\
-#./$(LIB_SRC_DIR)/stm32f10x_tim.o	\
-#./$(LIB_SRC_DIR)/stm32f10x_i2c.o	\
-#./$(LIB_SRC_DIR)/stm32f10x_usart.o	\
-#./$(LIB_SRC_DIR)/stm32f10x_rcc.o	\
-#./$(LIB_SRC_DIR)/stm32f10x_flash.o	\
-#./$(LIB_SRC_DIR)/stm32f10x_pwr.o   	\
+#./$(LIB_BOARD_SRC)/system_stm32f10x.o	\
+#./$(LIB_BOARD_SRC)/stm32f10x_gpio.o	\
+#./$(LIB_BOARD_SRC)/stm32f10x_tim.o	\
+#./$(LIB_BOARD_SRC)/stm32f10x_i2c.o	\
+#./$(LIB_BOARD_SRC)/stm32f10x_usart.o	\
+#./$(LIB_BOARD_SRC)/stm32f10x_rcc.o	\
+#./$(LIB_BOARD_SRC)/stm32f10x_flash.o	\
+#./$(LIB_BOARD_SRC)/stm32f10x_pwr.o   	\
 
 #==============================================================================
 # SECTIONS
 #==============================================================================
 all: $(TARGET_BIN_DUMP) $(TARGET_HEX_DUMP) $(TARGET_ELF_DUMP)
-	mv -f $(CORE_SRC_DIR)/*.o $(OUTLIB_DIR)
+	mv -f $(LIB_CORE_SRC)/*.o $(OUTLIB_DIR)
 	mv -f $(APPDIR)/*.o $(OUTAPP_DIR)
-#	mv -f $(LIB_SRC_DIR)/*.o $(OUTLIB_DIR)
+#	mv -f $(LIB_BOARD_SRC)/*.o $(OUTLIB_DIR)
 	@echo "Build done !"
 
 $(TARGET_BIN_DUMP): $(TARGET_BIN)
@@ -128,8 +132,8 @@ JUNK	:= $(TARGET_ELF) $(TARGET_BIN) $(TARGET_HEX) $(TARGET_MAP) \
 
 clean:
 	rm -rf $(JUNK)
-	rm -f  $(LIB_SRC_DIR)/*.o
-	rm -f  $(CORE_SRC_DIR)/*.o
+	rm -f  $(LIB_BOARD_SRC)/*.o
+	rm -f  $(LIB_CORE_SRC)/*.o
 	rm -f  $(OUTLIB_DIR)/*.o
 	rm -f  $(OUTAPP_DIR)/*.o
 	rm -f  $(OUTOS_DIR)/*.o

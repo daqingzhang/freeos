@@ -37,7 +37,7 @@ void board_init(void)
 	// config pinmux & GPIO
 
 	// config serial
-	//serial_init();
+	serial_init();
 
 	// config LED
 

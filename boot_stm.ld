@@ -18,6 +18,7 @@ SECTIONS
 		KEEP(lib/core/arm/core_op.o	(.text))
 		KEEP(lib/core/arm/syscall.o	(.text))
 		lib/board/stmf10x/*		(.text) /* library objects */
+		os/device/stmf10x/*		(.text) /* devices */
 		*(.text .text.*)
 		. = ALIGN(4);
 	} >flash
