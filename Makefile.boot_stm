@@ -11,20 +11,20 @@ OUTLIB_DIR	:= $(TOP_DIR)/$(OUTDIR)/$(LIBDIR)
 OUTAPP_DIR	:= $(TOP_DIR)/$(OUTDIR)/$(APPDIR)
 OUTOS_DIR	:= $(TOP_DIR)/$(OUTDIR)/$(OSDIR)
 
-APPINC		:= $(APPDIR)/include
-LIBINC		:= $(LIBDIR)/include
+APP_INC		:= $(APPDIR)/include
+LIB_INC		:= $(LIBDIR)/include
 LIB_BOARD_INC	:= $(LIBDIR)/board/$(CHIP)/include
 LIB_BOARD_SRC	:= $(LIBDIR)/board/$(CHIP)
 LIB_CORE_INC	:= $(LIBDIR)/core/$(CORE)/include
 LIB_CORE_SRC	:= $(LIBDIR)/core/$(CORE)
-OS_DEVICE_INC	:= $(OSDIR)/device/$(CHIP)/include
+OS_DEVICE_INC	:= $(OSDIR)/device/include
 OS_DEVICE_SRC	:= $(OSDIR)/device/$(CHIP)
 
-LIB_INCS	:= -I$(LIBINC)
-LIB_INCS	+= -I$(APPINC)
-LIB_INCS	+= -I$(LIB_BOARD_INC)
-LIB_INCS	+= -I$(LIB_CORE_INC)
-LIB_INCS	+= -I$(OS_DEVICE_INC)
+INCS		:= -I$(LIB_INC)
+INCS		+= -I$(LIB_BOARD_INC)
+INCS		+= -I$(LIB_CORE_INC)
+INCS		+= -I$(OS_DEVICE_INC)
+INCS		+= -I$(APP_INC)
 
 #==============================================================================
 # TARGET FILES
@@ -54,12 +54,12 @@ OBJDUMP := $(TC)-objdump
 CC_OPTS		:= -g -mthumb -mcpu=cortex-m3 -march=armv7-m
 CC_OPTS		+= -O2 -Wall -static -fno-common -fno-builtin-printf
 
-LD_OPTS		:= -T boot_stm.ld $(LIB_INCS)
+LD_OPTS		:= -T boot_stm.ld $(INCS)
 LD_OPTS		+= -Wl,-nostdlib,--relax,-Map=$(TARGET_MAP),--gc-sections
 LD_OPTS		+= -nostartfiles -ffast-math -lgcc
 
 OBJDUMP_OPTS	:= --disassemble-all
-OBJDUMP_OTPS	+= --section=.text --section=.test.startup --section=.data
+OBJDUMP_OPTS	+= --section=.text --section=.test.startup --section=.data
 
 #==============================================================================
 # MACRO DEFINITIONS
@@ -70,15 +70,18 @@ TARGET_DEFS	+= -DSTM32F10X_MD
 #==============================================================================
 # OBJECTS & SOURCE FILES
 #==============================================================================
-
 A_OBJS := \
 	./$(LIB_CORE_SRC)/startup_stm.o \
 	./$(LIB_CORE_SRC)/core_op.o
 
 C_OBJS := \
 	./$(LIB_CORE_SRC)/syscall.o	\
-	./$(LIB_BOARD_SRC)/stm32f10x_system.o	\
+	./$(OS_DEVICE_SRC)/string.o	\
 	./$(OS_DEVICE_SRC)/serial.o	\
+	./$(LIB_BOARD_SRC)/stm32f10x_usart.o	\
+	./$(LIB_BOARD_SRC)/stm32f10x_gpio.o	\
+	./$(LIB_BOARD_SRC)/stm32f10x_rcc.o	\
+	./$(LIB_BOARD_SRC)/stm32f10x_system.o	\
 	./$(APPDIR)/main.o
 
 #./$(LIB_BOARD_SRC)/system_stm32f10x.o	\
@@ -95,8 +98,9 @@ C_OBJS := \
 #==============================================================================
 all: $(TARGET_BIN_DUMP) $(TARGET_HEX_DUMP) $(TARGET_ELF_DUMP)
 	mv -f $(LIB_CORE_SRC)/*.o $(OUTLIB_DIR)
+	mv -f $(LIB_BOARD_SRC)/*.o $(OUTLIB_DIR)
 	mv -f $(APPDIR)/*.o $(OUTAPP_DIR)
-#	mv -f $(LIB_BOARD_SRC)/*.o $(OUTLIB_DIR)
+	mv -f $(OS_DEVICE_SRC)/*.o $(OUTOS_DIR)
 	@echo "Build done !"
 
 $(TARGET_BIN_DUMP): $(TARGET_BIN)
@@ -121,11 +125,11 @@ $(TARGET_ELF): $(C_OBJS) $(A_OBJS)
 
 %.o: %.c
 	$(CC) $(CC_OPTS) $(TARGET_DEFS)	\
-		-c $(LIB_INCS) $< -o $@
+		-c $(INCS) $< -o $@
 
 %.o: %.S
 	$(CC) $(CC_OPTS) $(TARGET_DEFS)	\
-		-c $(LIB_INCS) $< -o $@
+		-c $(INCS) $< -o $@
 
 JUNK	:= $(TARGET_ELF) $(TARGET_BIN) $(TARGET_HEX) $(TARGET_MAP) \
 	$(TARGET_SYM) $(TARGET_ELF_DUMP) $(TARGET_BIN_DUMP) $(TARGET_HEX_DUMP)

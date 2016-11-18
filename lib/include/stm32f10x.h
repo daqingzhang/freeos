@@ -432,6 +432,10 @@ typedef enum IRQn
 #include <core_cm3.h>
 #include <stdint.h>
 
+#ifndef assert_param
+#define assert_param(...) do{} while(0)
+#endif
+
 typedef signed int  s32;
 typedef signed short s16;
 typedef signed char  s8;

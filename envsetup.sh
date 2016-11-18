@@ -33,4 +33,11 @@ cdcore()
 	cd $FREEOS_CORE_DIR
 }
 
+lsout()
+{
+	ls -l out/lib
+	ls -l out/app
+	ls -l out/os
+}
+
 freeosenv
