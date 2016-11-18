@@ -57,9 +57,9 @@ void serial_loopback(void)
 	serial_puts(USART1_ID,"input <quit> to exit\n");
 
 	while(1) {
-		serial_puts(USART1_ID,"input a string: \n");
+		serial_puts(USART1_ID,"\ninput a string: ");
 		serial_gets(USART1_ID, str);
-		serial_puts(USART1_ID,"string is: \n");
+		serial_puts(USART1_ID,"\nstring is: ");
 		serial_puts(USART1_ID, str);
 
 		if(!strcmp(str,"quit"))

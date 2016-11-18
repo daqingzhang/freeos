@@ -218,8 +218,9 @@ void serial_puts(int id,const char *pstr)
 {
 	while(*pstr != '\0') {
 		if(*pstr == '\n')
-			serial_puts(id,'\r');
+			serial_putc(id,'\r');
 		serial_putc(id,*pstr++);
+	}
 }
 
 static void backspace(int id,int cnts)
