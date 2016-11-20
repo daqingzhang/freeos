@@ -70,6 +70,8 @@
 #ifndef PORTABLE_H
 #define PORTABLE_H
 
+typedef unsigned int size_t;
+
 /* Include the macro file relevant to the port being used.
 NOTE:  The following definitions are *DEPRECATED* as it is preferred to instead
 just add the path to the correct portmacro.h header file to the compiler's
@@ -193,7 +195,8 @@ include path. */
 #endif
 
 #ifdef GCC_ARMCM3
-	#include "../../Source/portable/GCC/ARM_CM3/portmacro.h"
+//	#include "../../Source/portable/GCC/ARM_CM3/portmacro.h"
+	#include <portmacro.h>
 #endif
 
 #ifdef IAR_ARM_CM3

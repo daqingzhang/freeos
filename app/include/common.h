@@ -1,6 +1,5 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
-#include <base_types.h>
 #include <core_op.h>
 #include <serial.h>
 #include <timer.h>

@@ -69,7 +69,7 @@
 /*
  * Include the generic headers required for the FreeRTOS port being used.
  */
-#include <stddef.h>
+//#include <stddef.h>
 
 /*
  * If stdint.h cannot be located then:
@@ -94,7 +94,7 @@ extern "C" {
 #include "projdefs.h"
 
 /* Application specific configuration options. */
-#include "FreeRTOSConfig.h"
+#include <FreeRTOSConfig.h>
 
 /* configUSE_PORT_OPTIMISED_TASK_SELECTION must be defined before portable.h
 is included as it is used by the port layer. */

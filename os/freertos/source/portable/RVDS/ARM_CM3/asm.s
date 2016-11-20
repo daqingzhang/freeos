@@ -1,6 +1,11 @@
-#include "FreeRTOS.h"
-#include "task.h"
-#include "asm.h"
+#include <FreeRTOS.h>
+#include <task.h>
+#include <asm.h>
+
+.syntax unified
+.arch	armv7-m
+.cpu	cortex-m3
+.thumb
 
 .global uxCriticalNesting;
 .global pxCurrentTCB;
@@ -76,7 +81,7 @@ xPortPendSVHandler:
 	str r0, [r2]				/* Save the new top of stack into the first member of the TCB. */
 
 	stmdb sp!, {r3, r14}
-	mov r0, #configMAX_SYSCALL_INTERRUPT_PRIORITY
+/*	mov r0, #configMAX_SYSCALL_INTERRUPT_PRIORITY */
 	msr basepri, r0
 	bl vTaskSwitchContext
 	mov r0, #0
@@ -99,7 +104,7 @@ ulPortSetInterruptMask:
 	.align 8
 
 	mrs r0, basepri
-	mov r1, #configMAX_SYSCALL_INTERRUPT_PRIORITY
+/*	mov r1, #configMAX_SYSCALL_INTERRUPT_PRIORITY */
 	msr basepri, r1
 	bx r14
 

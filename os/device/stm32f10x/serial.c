@@ -1,12 +1,10 @@
 #include <stdarg.h>
-#include <ctype.h>
 #include <string.h>
-
+#include <serial.h>
+#include <stm32f10x_system.h>
 #include <stm32f10x_rcc.h>
 #include <stm32f10x_gpio.h>
 #include <stm32f10x_usart.h>
-#include <stm32f10x_system.h>
-#include <serial.h>
 
 /*
  * USART Basic Driver

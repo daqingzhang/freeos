@@ -67,6 +67,10 @@
 #include "task.h"
 #include "croutine.h"
 
+#ifndef NULL
+#define NULL 0
+#endif
+
 /*
  * Some kernel aware debuggers require data to be viewed to be global, rather
  * than file scope.

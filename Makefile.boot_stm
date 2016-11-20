@@ -1,5 +1,7 @@
 CHIP		:= stm32f10x
 CORE		:= arm
+OS		:= freertos
+OS_ARCH		:= ARM_CM3
 #==============================================================================
 # DIRECTORY
 #==============================================================================
@@ -19,12 +21,20 @@ LIB_CORE_INC	:= $(LIBDIR)/core/$(CORE)/include
 LIB_CORE_SRC	:= $(LIBDIR)/core/$(CORE)
 OS_DEVICE_INC	:= $(OSDIR)/device/include
 OS_DEVICE_SRC	:= $(OSDIR)/device/$(CHIP)
+OS_FREEOS_CFG	:= $(OSDIR)/$(OS)/config
+OS_FREEOS_INC	:= $(OSDIR)/$(OS)/source/include
+OS_FREEOS_SRC	:= $(OSDIR)/$(OS)/source
+OS_FREEOS_PORT	:= $(OSDIR)/$(OS)/source/portable/RVDS/$(OS_ARCH)
+OS_FREEOS_MEM	:= $(OSDIR)/$(OS)/source/portable/MemMang
 
 INCS		:= -I$(LIB_INC)
 INCS		+= -I$(LIB_BOARD_INC)
 INCS		+= -I$(LIB_CORE_INC)
 INCS		+= -I$(OS_DEVICE_INC)
 INCS		+= -I$(APP_INC)
+INCS		+= -I$(OS_FREEOS_CFG)
+INCS		+= -I$(OS_FREEOS_INC)
+INCS		+= -I$(OS_FREEOS_PORT)
 
 #==============================================================================
 # TARGET FILES
@@ -66,25 +76,46 @@ OBJDUMP_OPTS	+= --section=.text --section=.test.startup --section=.data
 #==============================================================================
 TARGET_DEFS	:= -DHOST_DEBUG=1
 TARGET_DEFS	+= -DSTM32F10X_MD
-
+TARGET_DEFS	+= -DCONFIG_USE_FREERTOS
+TARGET_DEFS	+= -DGCC_ARMCM3
 #==============================================================================
 # OBJECTS & SOURCE FILES
 #==============================================================================
 A_OBJS := \
 	./$(LIB_CORE_SRC)/startup_stm.o \
-	./$(LIB_CORE_SRC)/core_op.o
+	./$(LIB_CORE_SRC)/core_op.o	\
+	./$(OS_FREEOS_PORT)/asm.o
 
-C_OBJS := \
-	./$(LIB_CORE_SRC)/syscall.o	\
-	./$(OS_DEVICE_SRC)/string.o	\
+C_OBJS_LIB := \
+	./$(LIB_CORE_SRC)/syscall.o		\
 	./$(LIB_BOARD_SRC)/stm32f10x_system.o	\
 	./$(LIB_BOARD_SRC)/stm32f10x_rcc.o	\
 	./$(LIB_BOARD_SRC)/stm32f10x_gpio.o	\
-	./$(LIB_BOARD_SRC)/stm32f10x_usart.o	\
+	./$(LIB_BOARD_SRC)/stm32f10x_usart.o
+
+C_OBJS_DEV := \
+	./$(OS_DEVICE_SRC)/string.o	\
 	./$(OS_DEVICE_SRC)/serial.o	\
 	./$(OS_DEVICE_SRC)/timer.o	\
-	./$(OS_DEVICE_SRC)/led.o	\
+	./$(OS_DEVICE_SRC)/led.o
+
+C_OBJS_APP := \
 	./$(APPDIR)/main.o
+
+C_OBJS_OS := \
+	./$(OS_FREEOS_MEM)/heap_2.o	\
+	./$(OS_FREEOS_PORT)/port.o	\
+	./$(OS_FREEOS_SRC)/croutine.o	\
+	./$(OS_FREEOS_SRC)/event_groups.o	\
+	./$(OS_FREEOS_SRC)/list.o	\
+	./$(OS_FREEOS_SRC)/queue.o	\
+	./$(OS_FREEOS_SRC)/tasks.o	\
+	./$(OS_FREEOS_SRC)/timers.o
+
+C_OBJS	:= $(C_OBJS_LIB) \
+	$(C_OBJS_DEV) 	\
+	$(C_OBJS_APP)	\
+	$(C_OBJS_OS)	\
 
 #./$(LIB_BOARD_SRC)/system_stm32f10x.o	\
 #./$(LIB_BOARD_SRC)/stm32f10x_gpio.o	\
@@ -103,6 +134,9 @@ all: $(TARGET_BIN_DUMP) $(TARGET_HEX_DUMP) $(TARGET_ELF_DUMP)
 	mv -f $(LIB_BOARD_SRC)/*.o $(OUTLIB_DIR)
 	mv -f $(APPDIR)/*.o $(OUTAPP_DIR)
 	mv -f $(OS_DEVICE_SRC)/*.o $(OUTOS_DIR)
+	mv -f $(OS_FREEOS_MEM)/*.o $(OUTOS_DIR)
+	mv -f $(OS_FREEOS_PORT)/*.o $(OUTOS_DIR)
+	mv -f $(OS_FREEOS_SRC)/*.o $(OUTOS_DIR)
 	@echo "Build done !"
 
 $(TARGET_BIN_DUMP): $(TARGET_BIN)
