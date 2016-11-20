@@ -35,8 +35,13 @@ cdcore()
 
 lsout()
 {
+	echo "out/lib"
 	ls -l out/lib
+
+	echo "out/app"
 	ls -l out/app
+
+	echo "out/os"
 	ls -l out/os
 }
 

@@ -3,6 +3,7 @@
 #include <base_types.h>
 #include <core_op.h>
 #include <serial.h>
+#include <timer.h>
 
 void rprintf(const char *fmt, ...);
 void mdelay(unsigned long ms);

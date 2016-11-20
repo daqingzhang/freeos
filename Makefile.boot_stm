@@ -77,11 +77,13 @@ A_OBJS := \
 C_OBJS := \
 	./$(LIB_CORE_SRC)/syscall.o	\
 	./$(OS_DEVICE_SRC)/string.o	\
-	./$(OS_DEVICE_SRC)/serial.o	\
-	./$(LIB_BOARD_SRC)/stm32f10x_usart.o	\
-	./$(LIB_BOARD_SRC)/stm32f10x_gpio.o	\
-	./$(LIB_BOARD_SRC)/stm32f10x_rcc.o	\
 	./$(LIB_BOARD_SRC)/stm32f10x_system.o	\
+	./$(LIB_BOARD_SRC)/stm32f10x_rcc.o	\
+	./$(LIB_BOARD_SRC)/stm32f10x_gpio.o	\
+	./$(LIB_BOARD_SRC)/stm32f10x_usart.o	\
+	./$(OS_DEVICE_SRC)/serial.o	\
+	./$(OS_DEVICE_SRC)/timer.o	\
+	./$(OS_DEVICE_SRC)/led.o	\
 	./$(APPDIR)/main.o
 
 #./$(LIB_BOARD_SRC)/system_stm32f10x.o	\
@@ -138,6 +140,7 @@ clean:
 	rm -rf $(JUNK)
 	rm -f  $(LIB_BOARD_SRC)/*.o
 	rm -f  $(LIB_CORE_SRC)/*.o
+	rm -f  $(OS_DEVICE_SRC)/*.o
 	rm -f  $(OUTLIB_DIR)/*.o
 	rm -f  $(OUTAPP_DIR)/*.o
 	rm -f  $(OUTOS_DIR)/*.o

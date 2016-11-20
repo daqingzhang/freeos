@@ -2,8 +2,15 @@
 
 #define AIRCR_VECTKEY_MASK 0x05FA0000
 #define CONFIG_CLKSRC_TIMEOUT 1000
-uint32_t SystemCoreClock = 0;
-static int set_system_clock_72mhz(void);
+
+uint32_t SystemCoreClock = HSE_VALUE;
+struct clock_tree clktree = {
+	.sysclk = HSE_VALUE,
+	.apb1clk = HSE_VALUE,
+	.apb2clk = HSE_VALUE,
+};
+
+static int set_system_clock(int clk);
 
 u32 system_get_cpuid(void)
 {
@@ -102,14 +109,15 @@ int system_systick_config(u32 ticks)
 {
 	if(ticks > SysTick_LOAD_RELOAD_Msk)
 		return -1;
+
 	SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
 	SysTick->LOAD = (ticks & SysTick_LOAD_RELOAD_Msk) - 1;
 	// set SysTick priority = 15
 	NVIC_SetPriority(SysTick_IRQn,(1 << __NVIC_PRIO_BITS) - 1);
+	// clear flags
 	SysTick->VAL  = 0;
 	// enable IRQ, use processor clock
 	SysTick->CTRL = (SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk);
-
 	return 0;
 }
 
@@ -120,7 +128,6 @@ void system_systick_run(int yes)
 	else
 		SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
 }
-
 
 int system_init_clock(void)
 {
@@ -141,12 +148,13 @@ int system_init_clock(void)
 	//clear pending flags & disable interrupts
 	RCC->CIR = ((1 << 23) | (0x1F << 16));
 
-	return(set_system_clock_72mhz());
+	return(set_system_clock(CONFIG_SYSCLK));
 }
 
-static int set_system_clock_72mhz(void)
+static int set_system_clock(int clk)
 {
 	int i = CONFIG_CLKSRC_TIMEOUT;
+	u32 mul = 0;
 
 	// HSEON = 1,enable HSE clock
 	RCC->CR |= RCC_CR_HSEON;
@@ -166,17 +174,32 @@ static int set_system_clock_72mhz(void)
 	FLASH->ACR &= ~(FLASH_ACR_LATENCY);
 	FLASH->ACR |= FLASH_ACR_LATENCY_2;
 
-	// config AHB bus frequency divider,HCLK = SYSCLK/1 = 72MHz
+	// config AHB bus frequency divider,HCLK = SYSCLK/1
 	RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
 
-	// config APB2 bus frequency divider,APB2CLK = HCLK/2 = 36MHz
+	// config APB2 bus frequency divider,APB2CLK = HCLK/2
 	RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;
 
-	// config APB1 bus frequency divider,APB1CLK = HCLK/2 = 36MHz
+	// config APB1 bus frequency divider,APB1CLK = HCLK/2
 	RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
 
-	// config PLLCLK = HSE * 9 = 72MHz;
-	RCC->CFGR |= (RCC_CFGR_PLLSRC_HSE | RCC_CFGR_PLLMULL9);
+	switch(clk) {
+	case CONFIG_SYSCLK_72MHZ:
+		mul = RCC_CFGR_PLLMULL9;
+		clktree.sysclk  = CONFIG_SYSCLK_72MHZ;
+		clktree.apb1clk = CONFIG_APBCLK_36MHZ;
+		clktree.apb2clk = CONFIG_APBCLK_36MHZ;
+		break;
+	case CONFIG_SYSCLK_64MHZ:
+	default:
+		mul = RCC_CFGR_PLLMULL8;
+		clktree.sysclk  = CONFIG_SYSCLK_64MHZ;
+		clktree.apb1clk = CONFIG_APBCLK_32MHZ;
+		clktree.apb2clk = CONFIG_APBCLK_32MHZ;
+		break;
+	}
+	// config PLLCLK = HSE * mul;
+	RCC->CFGR |= (RCC_CFGR_PLLSRC_HSE | mul);
 
 	// enable PLL
 	RCC->CR |= RCC_CR_PLLON;
@@ -196,7 +219,7 @@ static int set_system_clock_72mhz(void)
 	RCC->CFGR |= RCC_CFGR_SW_PLL;
 	while((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL);
 
-	SystemCoreClock = CONFIG_SYSCLK_72MHZ;
+	SystemCoreClock = CONFIG_SYSCLK;
 	return 0;
 }
 

@@ -8,12 +8,29 @@
 
 #define CONFIG_SYSCLK_72MHZ 72000000
 #define CONFIG_SYSCLK_64MHZ 64000000
+#define CONFIG_APBCLK_72MHZ 72000000
+#define CONFIG_APBCLK_36MHZ 36000000
+#define CONFIG_APBCLK_32MHZ 32000000
+
+#define CONFIG_SYSCLK  CONFIG_SYSCLK_72MHZ
+
+#define CONFIG_SYSTICK_US(us) (CONFIG_SYSCLK / 1000000 * us)
+#define CONFIG_SYSTICK_MS(ms) (CONFIG_SYSCLK / 1000 * ms)
 
 /* System Clock Frequency */
 extern uint32_t SystemCoreClock;
 
-#define NVIC_VECTOR_BASE_FLASH	(0x20000000)
-#define NVIC_VECTOR_BASE_SRAM	(0x08000000)
+struct clock_tree
+{
+	u32 sysclk;
+	u32 apb1clk;
+	u32 apb2clk;
+};
+
+extern struct clock_tree clktree;
+
+#define NVIC_VECTOR_BASE_FLASH	(0x08000000)
+#define NVIC_VECTOR_BASE_SRAM	(0x20000000)
 
 /*
  * if SCR[4] is set 1, processor will wakeup when a interrupt transmition

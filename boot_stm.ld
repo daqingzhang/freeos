@@ -17,8 +17,8 @@ SECTIONS
 		KEEP(lib/core/arm/startup_stm.o	(.text))
 		KEEP(lib/core/arm/core_op.o	(.text))
 		KEEP(lib/core/arm/syscall.o	(.text))
-		lib/board/stmf10x/*		(.text) /* library objects */
-		os/device/stmf10x/*		(.text) /* devices */
+		os/device/stmf10x/*		(.text) /* */
+		lib/board/stmf10x/*		(.text) /* */
 		*(.text .text.*)
 		. = ALIGN(4);
 	} >flash
@@ -28,6 +28,12 @@ SECTIONS
 		*(SORT_BY_ALIGNMENT(SORT_BY_NAME(.rodata*)))
 		. = ALIGN(4);
 	} >flash
+
+	.ARM.exidx : {
+		*(.ARM.exidx*)
+		*(.gnu.linkonce.armexidx.*)
+	} >flash
+
 	__rodata_end__ = . ;
 	__flash_end__ = . ;
 
