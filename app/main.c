@@ -3,10 +3,6 @@
 #include <stm32f10x_system.h>
 #include <led.h>
 
-#include <FreeRTOS.h>
-#include <task.h>
-#include <queue.h>
-
 const char *logo = "0x12345678abcd";
 int a = 1;
 int b = 2;
@@ -109,24 +105,41 @@ void leds_on(void)
 }
 
 #ifdef CONFIG_USE_FREERTOS
+#include <FreeRTOS.h>
+#include <task.h>
+#include <queue.h>
 
-xTaskHandle LedTaskHandle;
+xTaskHandle hLedTask;
+xTaskHandle hPeriodicTask;
 
 void vLedTask(void *pvParameters)
 {
-	const char *led_name[] = {"led1","led2","led3"};
+	//const char *led_name[] = {"led1","led2","led3"};
 	unsigned int led_id[] = {LED1,LED2,LED3};
 	unsigned int i = 0;
+	TickType_t delay = 1000 / portTICK_PERIOD_MS;
 
 	for(;;) {
-		rprintf("flash %s\r\n",led_name[i]);
+		//rprintf("flash %s\r\n",led_name[i]);
 		led_light_on(led_id[i]);
-		vTaskDelay(2);
+		vTaskDelay(delay);
 		led_light_off(led_id[i]);
-		vTaskDelay(2);
+		vTaskDelay(delay);
 
 		i++;
 		i = i % 3;
+	}
+}
+
+void vPeriodicTask(void *pvParam)
+{
+	TickType_t tick;
+	TickType_t period = 1000/portTICK_PERIOD_MS;
+
+	tick = xTaskGetTickCount();
+	for(;;) {
+		rprintf("tick = %d\r\n",tick);
+		vTaskDelayUntil(&tick,period);
 	}
 }
 
@@ -135,7 +148,8 @@ int main(int argc, const char *argv[])
 	rprintf("sysclk: %d, apb1clk: %d, apb2clk: %d\r\n",
 		clktree.sysclk,clktree.apb1clk,clktree.apb2clk);
 
-	xTaskCreate(vLedTask,"LedTask",256,NULL,4,&LedTaskHandle);
+	xTaskCreate(vLedTask,"LedTask",256,NULL,4,&hLedTask);
+	xTaskCreate(vPeriodicTask,"PeriodicTask",256,NULL,4,&hPeriodicTask);
 	vTaskStartScheduler();
 	for(;;);
 }
