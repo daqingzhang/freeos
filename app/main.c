@@ -58,8 +58,10 @@ void board_init(void)
 
 	// enable gloabl interrupts
 	__enable_irq();
+	rprintf("%s done! \r\n",__func__);
 }
 
+#ifndef CONFIG_USE_FREERTOS
 int main(int argc, const char *argv[])
 {
 	int r;
@@ -77,6 +79,7 @@ int main(int argc, const char *argv[])
 	leds_on();
 	return c;
 }
+#endif
 
 void serial_loopback(void)
 {
@@ -103,6 +106,38 @@ void leds_on(void)
 		led_light_flash(LED2,500,500);
 		led_light_flash(LED3,500,500);
 	}
+}
+
+#ifdef CONFIG_USE_FREERTOS
+
+xTaskHandle LedTaskHandle;
+
+void vLedTask(void *pvParameters)
+{
+	const char *led_name[] = {"led1","led2","led3"};
+	unsigned int led_id[] = {LED1,LED2,LED3};
+	unsigned int i = 0;
+
+	for(;;) {
+		rprintf("flash %s\r\n",led_name[i]);
+		led_light_on(led_id[i]);
+		vTaskDelay(2);
+		led_light_off(led_id[i]);
+		vTaskDelay(2);
+
+		i++;
+		i = i % 3;
+	}
+}
+
+int main(int argc, const char *argv[])
+{
+	rprintf("sysclk: %d, apb1clk: %d, apb2clk: %d\r\n",
+		clktree.sysclk,clktree.apb1clk,clktree.apb2clk);
+
+	xTaskCreate(vLedTask,"LedTask",256,NULL,4,&LedTaskHandle);
+	vTaskStartScheduler();
+	for(;;);
 }
 
 /*
@@ -159,3 +194,4 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
 	taskDISABLE_INTERRUPTS();
 	for( ;; );
 }
+#endif
