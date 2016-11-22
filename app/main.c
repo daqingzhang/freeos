@@ -109,18 +109,71 @@ void leds_on(void)
 #include <task.h>
 #include <queue.h>
 
-TaskHandle_t LedTaskHanle;
+TaskHandle_t LedTaskHandle;
 TaskHandle_t PeriodicTaskHandle;
+TaskHandle_t PrinterTaskHandle;
+
+TaskStatus_t TskStatus;
+QueueHandle_t MessageQueue;
+QueueHandle_t DataQueue;
+
+enum {
+	PRINT_CHAR,
+	PRINT_UINT8,
+	PRINT_UINT16,
+	PRINT_UINT32,
+};
+
+void vPrintMessage(void  *pvParameters,int t)
+{
+	vTaskSuspendAll();
+	switch(t) {
+	case PRINT_CHAR:
+	{
+		char *s = (char *)pvParameters;
+		rprintf("%s",s);
+	}
+		break;
+	case PRINT_UINT8:
+	case PRINT_UINT16:
+	case PRINT_UINT32:
+	{
+		u32 d = *(u32 *)pvParameters;
+		rprintf("%d\r\n",d);
+	}
+	default:
+		break;
+	}
+	if(!xTaskResumeAll()) {
+		taskYIELD();
+	}
+}
+
+void vPrinterTask(void *pvParameters)
+{
+	static char RxBuffer[200];
+	static int RxBuffer2[10];
+	BaseType_t r;
+
+	for(;;) {
+		r = xQueueReceive(MessageQueue,RxBuffer,portMAX_DELAY);
+		if(r == pdPASS) {
+			vPrintMessage(RxBuffer,PRINT_CHAR);
+		}
+		r = xQueueReceive(DataQueue,RxBuffer2,portMAX_DELAY);
+		if(r == pdPASS) {
+			vPrintMessage(RxBuffer2,PRINT_UINT32);
+		}
+	}
+}
 
 void vLedTask(void *pvParameters)
 {
-	//const char *led_name[] = {"led1","led2","led3"};
 	unsigned int led_id[] = {LED1,LED2,LED3};
 	unsigned int i = 0;
-	TickType_t delay = 1000 / portTICK_PERIOD_MS;
+	TickType_t delay = 500 / portTICK_PERIOD_MS;
 
 	for(;;) {
-		//rprintf("flash %s\r\n",led_name[i]);
 		led_light_on(led_id[i]);
 		vTaskDelay(delay);
 		led_light_off(led_id[i]);
@@ -135,21 +188,39 @@ void vPeriodicTask(void *pvParameters)
 {
 	TickType_t tick;
 	TickType_t period = (*(int *)pvParameters)/portTICK_PERIOD_MS;
+	BaseType_t r;
 
 	tick = xTaskGetTickCount();
 	for(;;) {
-		rprintf("tick = %d\r\n",tick);
+		r = xQueueSend(MessageQueue,(void *)"Tick:",(TickType_t )10);
+		if(r != pdPASS) {
+			rprintf("\r\nqueue send failed,1\r\n");
+		}
+		r = xQueueSend(DataQueue,(void *)&tick,(TickType_t )10);
+		if(r != pdPASS) {
+			rprintf("\r\nqueue send failed,2\r\n");
+		}
 		vTaskDelayUntil(&tick,period);
 	}
 }
 
-TaskStatus_t CurStatus;
+#if  0
 void vWatchTask(void *pvParameters)
 {
-	TaskStatus_t *pCurStatus = &CurStatus;
+	TaskStatus_t *pTskStatus = &TskStatus;
+	TaskHandle_t TskHandle = NULL;
 
-	vTaskGetInfo(LedTaskHandle,
+	for(;;) {
+		TskHandle = xTaskGetHandle("LedTask");
+		if(TskHandle) {
+			vTaskGetInfo(TskHandle,
+					pTskStatus,
+					pdTRUE,
+					eInvalid);
+		}
+	}
 }
+#endif
 
 int main(int argc, const char *argv[])
 {
@@ -159,15 +230,33 @@ int main(int argc, const char *argv[])
 	rprintf("sysclk: %d, apb1clk: %d, apb2clk: %d\r\n",
 		clktree.sysclk,clktree.apb1clk,clktree.apb2clk);
 
-	// create task dynamically
-	r = xTaskCreate(vLedTask,"LedTask",256,NULL,4,&LedTaskHandle);
-	if(r != pdPASS) {
-		rprintf("%s, create Led Task failed, %d\r\n",__func__,r);
+	// create queue
+	MessageQueue = xQueueCreate(10,5);
+	if(MessageQueue == 0) {
+		rprintf("%s, create MessageQueue failed\r\n",__func__);
 		goto end;
 	}
-	r = xTaskCreate(vPeriodicTask,"PeriodicTask",256,(void *)&Period,3,&PeriodicTaskHandle);
+	DataQueue = xQueueCreate(1,4);
+	if(DataQueue == 0) {
+		rprintf("%s, create DataQueue failed\r\n",__func__);
+		goto end;
+	}
+
+	// create task dynamically
+	r = xTaskCreate(vLedTask,"LedTask",256,NULL,2,&LedTaskHandle);
 	if(r != pdPASS) {
-		rprintf("%s, create Periodic Task failed, %d\r\n",__func__,r);
+		rprintf("%s, create LedTask failed, %d\r\n",__func__,r);
+		goto end;
+	}
+	r = xTaskCreate(vPeriodicTask,"PeriodicTask",256,(void *)&Period,1,
+			&PeriodicTaskHandle);
+	if(r != pdPASS) {
+		rprintf("%s, create PeriodicTask failed, %d\r\n",__func__,r);
+		goto end;
+	}
+	r = xTaskCreate(vPrinterTask, "PrinterTask",256,NULL,4,&PrinterTaskHandle);
+	if(r != pdPASS) {
+		rprintf("%s, create PrinterTask failed, %d\r\n",__func__,r);
 		goto end;
 	}
 	// call scheduler
