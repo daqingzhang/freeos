@@ -103,6 +103,7 @@
 #define configUSE_RECURSIVE_MUTEXES		1
 #define configUSE_COUNTING_SEMAPHORES		1
 
+#define configGENERATE_RUN_TIME_STATS		0
 #define configUSE_DAEMON_TASK_STARTUP_HOOK 	0
 #define configUSE_APPLICATION_TASK_TAG		0
 #define configUSE_MALLOC_FAILED_HOOK		1
@@ -124,7 +125,7 @@ to exclude the API function. */
 
 #define INCLUDE_vTaskPrioritySet	1
 #define INCLUDE_uxTaskPriorityGet	1
-#define INCLUDE_vTaskDelete		1
+#define INCLUDE_vTaskDelete		0
 #define INCLUDE_vTaskCleanUpResources	1
 #define INCLUDE_vTaskSuspend		1
 #define INCLUDE_vTaskDelayUntil		1

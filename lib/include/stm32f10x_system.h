@@ -17,9 +17,6 @@
 #define CONFIG_SYSTICK_US(us) (CONFIG_SYSCLK / 1000000 * us)
 #define CONFIG_SYSTICK_MS(ms) (CONFIG_SYSCLK / 1000 * ms)
 
-/* System Clock Frequency */
-extern uint32_t SystemCoreClock;
-
 struct clock_tree
 {
 	u32 sysclk;

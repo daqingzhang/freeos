@@ -109,8 +109,8 @@ void leds_on(void)
 #include <task.h>
 #include <queue.h>
 
-xTaskHandle hLedTask;
-xTaskHandle hPeriodicTask;
+TaskHandle_t LedTaskHanle;
+TaskHandle_t PeriodicTaskHandle;
 
 void vLedTask(void *pvParameters)
 {
@@ -131,10 +131,10 @@ void vLedTask(void *pvParameters)
 	}
 }
 
-void vPeriodicTask(void *pvParam)
+void vPeriodicTask(void *pvParameters)
 {
 	TickType_t tick;
-	TickType_t period = 1000/portTICK_PERIOD_MS;
+	TickType_t period = (*(int *)pvParameters)/portTICK_PERIOD_MS;
 
 	tick = xTaskGetTickCount();
 	for(;;) {
@@ -143,14 +143,36 @@ void vPeriodicTask(void *pvParam)
 	}
 }
 
+TaskStatus_t CurStatus;
+void vWatchTask(void *pvParameters)
+{
+	TaskStatus_t *pCurStatus = &CurStatus;
+
+	vTaskGetInfo(LedTaskHandle,
+}
+
 int main(int argc, const char *argv[])
 {
+	BaseType_t r;
+	volatile static int Period = 1000;
+
 	rprintf("sysclk: %d, apb1clk: %d, apb2clk: %d\r\n",
 		clktree.sysclk,clktree.apb1clk,clktree.apb2clk);
 
-	xTaskCreate(vLedTask,"LedTask",256,NULL,4,&hLedTask);
-	xTaskCreate(vPeriodicTask,"PeriodicTask",256,NULL,4,&hPeriodicTask);
+	// create task dynamically
+	r = xTaskCreate(vLedTask,"LedTask",256,NULL,4,&LedTaskHandle);
+	if(r != pdPASS) {
+		rprintf("%s, create Led Task failed, %d\r\n",__func__,r);
+		goto end;
+	}
+	r = xTaskCreate(vPeriodicTask,"PeriodicTask",256,(void *)&Period,3,&PeriodicTaskHandle);
+	if(r != pdPASS) {
+		rprintf("%s, create Periodic Task failed, %d\r\n",__func__,r);
+		goto end;
+	}
+	// call scheduler
 	vTaskStartScheduler();
+end:
 	for(;;);
 }
 

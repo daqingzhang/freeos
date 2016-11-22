@@ -3,7 +3,6 @@
 #define AIRCR_VECTKEY_MASK 0x05FA0000
 #define CONFIG_CLKSRC_TIMEOUT 1000
 
-uint32_t SystemCoreClock = HSE_VALUE;
 struct clock_tree clktree = {
 	.sysclk = HSE_VALUE,
 	.apb1clk = HSE_VALUE,
@@ -219,7 +218,6 @@ static int set_system_clock(int clk)
 	RCC->CFGR |= RCC_CFGR_SW_PLL;
 	while((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL);
 
-	SystemCoreClock = CONFIG_SYSCLK;
 	return 0;
 }
 
