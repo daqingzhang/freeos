@@ -99,7 +99,8 @@ C_OBJS_DEV := \
 	./$(OS_DEVICE_SRC)/led.o
 
 C_OBJS_APP := \
-	./$(APPDIR)/main.o
+	./$(APPDIR)/main.o \
+	./$(APPDIR)/ledtask.o
 
 C_OBJS_OS := \
 	./$(OS_FREEOS_MEM)/heap_2.o	\
