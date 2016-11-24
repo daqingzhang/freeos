@@ -100,7 +100,8 @@ C_OBJS_DEV := \
 
 C_OBJS_APP := \
 	./$(APPDIR)/main.o \
-	./$(APPDIR)/ledtask.o
+	./$(APPDIR)/led_fsm.o \
+	./$(APPDIR)/led_task.o
 
 C_OBJS_OS := \
 	./$(OS_FREEOS_MEM)/heap_2.o	\

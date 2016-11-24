@@ -1,6 +1,6 @@
 #include <string.h>
 #include <led.h>
-#include <ledtask.h>
+#include <led_task.h>
 
 TaskHandle_t LedDispHandle;
 TaskHandle_t Led1DlyHandle;
@@ -202,6 +202,96 @@ void vLed3DlyTask(void *pvParameters)
 	}
 }
 
+#if 1
+void vLedCtrlTask(void *pvParameters)
+{
+	TickType_t TxWait = 10,RxWait = 5,IdleWait = 500,tick;
+	BaseType_t r;
+	int err = 0,dly[] = {50,40,30,0},i = 0,update;
+	struct LedMsgFmt MsgCtrl[3],MsgDly[3],MsgRsp;
+	struct LedMsgStateType state;
+
+	xLedMsgPack(&MsgCtrl[0],LED_CMD_ON,1,0,0,0);
+	xLedMsgPack(&MsgCtrl[1],LED_CMD_ON,0,1,0,0);
+	xLedMsgPack(&MsgCtrl[2],LED_CMD_ON,0,0,1,0);
+
+	xLedMsgPack(&MsgDly[0],LED_CMD_DLY,dly[0],dly[1],dly[2],dly[3]);
+	xLedMsgPack(&MsgDly[1],LED_CMD_DLY,dly[0],dly[1],dly[2],dly[3]);
+	xLedMsgPack(&MsgDly[2],LED_CMD_DLY,dly[0],dly[1],dly[2],dly[3]);
+
+	r = 0;
+	i = 0;
+	err = 0;
+	update = 0;
+	xLedMsgStateInit(&state);
+
+	for(;;) {
+		switch(xLedMsgCurStateGet(&state)) {
+		case STATE_DISP:
+			vMsgPrint("STATE_DISP\r\n",'s');
+			r = xQueueSend(LedDispQueue,(void *)&MsgCtrl[i],TxWait);
+			if(r != pdPASS) {
+				err = 0x01;
+				break;
+			}
+			r = xQueueReceive(LedRspQueue,(void *)&MsgRsp,RxWait);
+			if(r == pdPASS) {
+				// TODO: check ack
+				vLedMsgPrint(&MsgRsp);
+				update = xLedMsgStateUpdate(&state,DISP_TO_DLY);
+			}
+			break;
+		case STATE_DLY:
+			vMsgPrint("STATE_DLY\r\n",'s');
+			r = xQueueSend(Led1DlyQueue,(void *)&MsgDly[i],TxWait);
+			if(r != pdPASS) {
+				err = 0x02;
+				break;
+			}
+			r = xQueueReceive(LedRspQueue,(void *)&MsgRsp,RxWait);
+			if(r == pdPASS) {
+				// TODO: check ack
+				vLedMsgPrint(&MsgRsp);
+				update = xLedMsgStateUpdate(&state,DLY_TO_RSP);
+			}
+			break;
+		case STATE_RSP:
+			vMsgPrint("STATE_RSP\r\n",'s');
+			r = xQueueReceive(LedRspQueue,(void *)&MsgRsp,portMAX_DELAY);
+			if(r == pdPASS) {
+				// TODO: check ack
+				vLedMsgPrint(&MsgRsp);
+
+				i++;
+				i = i % 3;
+				if(i)
+					update = xLedMsgStateUpdate(&state,RSP_TO_DISP);
+				else
+					update = xLedMsgStateUpdate(&state,RSP_TO_IDLE);
+			}
+			break;
+		case STATE_IDLE:
+			vMsgPrint("STATE_IDLE\r\n",'s');
+			tick = xTaskGetTickCount();
+			vTaskDelayUntil(&tick,IdleWait);
+			update = xLedMsgStateUpdate(&state,IDLE_TO_DISP);
+			break;
+		default:
+			vMsgPrint("STATE_UNKNOW\r\n",'s');
+			update = -1;
+			break;
+		}
+		if(update)
+			break;
+		r = xLedMsgStateSwitch(&state);
+	}
+	vTaskSuspendAll();
+	rprintf("%s, error %d\r\n",__func__,err);
+	xLedMsgStatePrint(&state);
+	xTaskResumeAll();
+	for(;;);
+}
+#else
 void vLedCtrlTask(void *pvParameters)
 {
 	TickType_t wait = 10;
@@ -254,6 +344,7 @@ void vLedCtrlTask(void *pvParameters)
 	xTaskResumeAll();
 	for(;;);
 }
+#endif
 
 int xLedTaskConstructor(void)
 {

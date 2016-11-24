@@ -8,43 +8,49 @@ static void handler_info(int id)
 
 void NMI_Handler(void)
 {
-	handler_info(0);
+	rprintf("%s\n",__func__);
+	handler_info(2);
 }
 
 void HardFault_Handler(void)
 {
-	handler_info(0);
+	rprintf("%s\n",__func__);
+	handler_info(3);
 }
 
 void MemManage_Handler(void)
 {
-	handler_info(0);
+	rprintf("%s\n",__func__);
+	handler_info(4);
 }
 
 void BusFault_Handler(void)
 {
-	handler_info(0);
+	rprintf("%s\n",__func__);
+	handler_info(5);
 }
 
 void UsageFault_Handler(void)
 {
-	handler_info(0);
+	rprintf("%s\n",__func__);
+	handler_info(6);
 }
 
 void DebugMon_Handler(void)
 {
-	handler_info(0);
+	rprintf("%s\n",__func__);
+	handler_info(7);
 }
 
 #ifndef CONFIG_USE_FREERTOS
 void SVC_Handler(void)
 {
-
+	rprintf("%s\n",__func__);
 }
 
 void PendSV_Handler(void)
 {
-
+	rprintf("%s\n",__func__);
 }
 
 void SysTick_Handler(void)

@@ -99,7 +99,7 @@ void leds_on(void)
 
 #else /* CONFIG_USE_FREERTOS defined */
 
-#include <ledtask.h>
+#include <led_task.h>
 #if 0
 TaskStatus_t TskStatus;
 void vWatchTask(void *pvParameters)

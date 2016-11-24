@@ -73,6 +73,56 @@ struct LedMsgFmt
 	u16 crc;
 };
 
+#define LED_FSM_R0 0
+#define LED_FSM_R1 1
+#define LED_FSM_R2 2
+#define LED_FSM_R3 3
+#define LED_FSM_R4 4
+#define LED_FSM_R5 5
+#define LED_FSM_R6 6
+#define LED_FSM_R7 7
+#define LED_FSM_R8 8
+
+#define LED_FSM_S0 0
+#define LED_FSM_S1 1
+#define LED_FSM_S2 2
+#define LED_FSM_S3 3
+
+enum LedFsmRouteType
+{
+	DISP_TO_DISP	= LED_FSM_R0,
+	DISP_TO_DLY	= LED_FSM_R1,
+	DLY_TO_DLY	= LED_FSM_R2,
+	DLY_TO_RSP	= LED_FSM_R3,
+	RSP_TO_RSP	= LED_FSM_R4,
+	RSP_TO_DISP	= LED_FSM_R5,
+	RSP_TO_IDLE	= LED_FSM_R6,
+	IDLE_TO_IDLE	= LED_FSM_R7,
+	IDLE_TO_DISP	= LED_FSM_R8,
+};
+
+enum LedFsmStateType
+{
+	STATE_DISP	= LED_FSM_S0,
+	STATE_DLY	= LED_FSM_S1,
+	STATE_RSP	= LED_FSM_S2,
+	STATE_IDLE	= LED_FSM_S3,
+};
+
+struct LedMsgStateType
+{
+	enum LedFsmStateType current;
+	enum LedFsmRouteType r;
+	enum LedFsmStateType next;
+};
+
+int xLedMsgStateUpdate(struct LedMsgStateType *state, enum LedFsmRouteType route);
+int xLedMsgStateSwitch(struct LedMsgStateType *state);
+int xLedMsgCurStateGet(struct LedMsgStateType *state);
+int xLedMsgNextStateGet(struct LedMsgStateType *state);
+int xLedMsgStateInit(struct LedMsgStateType *p);
+int xLedMsgStatePrint(struct LedMsgStateType *p);
+
 extern TaskHandle_t LedDispHandle;
 extern TaskHandle_t Led1DlyHandle;
 extern TaskHandle_t Led2DlyHandle;
