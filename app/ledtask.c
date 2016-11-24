@@ -8,7 +8,7 @@ TaskHandle_t Led2DlyHandle;
 TaskHandle_t Led3DlyHandle;
 TaskHandle_t LedCtrlHandle;
 
-QueueHandle_t LedCmdQueue;
+QueueHandle_t LedDispQueue;
 QueueHandle_t LedRspQueue;
 QueueHandle_t Led1DlyQueue;
 QueueHandle_t Led2DlyQueue;
@@ -48,7 +48,6 @@ static int xLedMsgPack(struct LedMsgFmt *msg,int cmd,int f1,int f2,int f3,int f4
 	memset(&(msg->pl[i]),LED_PL_DUMMY,LED_MSG_PL_SIZE - i);
 	msg->crc = CalCRC16(msg->pl,LED_MSG_PL_SIZE);
 	return 0;
-
 }
 
 void vLedMsgPrint(struct LedMsgFmt *msg)
@@ -72,7 +71,8 @@ void vLedDispTask(void *pvParameters)
 	struct LedMsgFmt DispMsg;
 
 	for(;;) {
-		r = xQueueReceive(LedCmdQueue,(void *)&DispMsg,portMAX_DELAY);
+		r = xQueueReceive(LedDispQueue,(void *)&DispMsg,portMAX_DELAY);
+		vLedMsgPrint(&DispMsg);
 		if(r != pdPASS)
 			continue;
 		if(DispMsg.cmd != LED_CMD_ON)
@@ -87,7 +87,6 @@ void vLedDispTask(void *pvParameters)
 			else
 				led_light_off(led);
 		}
-		vLedMsgPrint(&DispMsg);
 	}
 }
 
@@ -101,6 +100,8 @@ void vLed1DlyTask(void *pvParameters)
 
 	for(;;) {
 		r = xQueueReceive(Led1DlyQueue,(void *)&msg,portMAX_DELAY);
+		vLedMsgPrint(&msg);
+		if(r != pdPASS)
 		if(r != pdPASS)
 			continue;
 		if(msg.cmd != LED_CMD_DLY)
@@ -121,7 +122,7 @@ void vLed1DlyTask(void *pvParameters)
 			xLedMsgPack(&msg,LED_CMD_RSP,LED_ACK_DLY_OK,0,0,0);
 			r = xQueueSend(LedRspQueue,(void *)&msg,portMAX_DELAY);
 			if(r != pdPASS) {
-				vMsgPrint("vLed1DlyTask, semd msg failed\r\n",'s');
+				vMsgPrint("vLed1DlyTask, send msg failed\r\n",'s');
 			}
 		}
 	}
@@ -137,6 +138,7 @@ void vLed2DlyTask(void *pvParameters)
 
 	for(;;) {
 		r = xQueueReceive(Led2DlyQueue,(void *)&msg,portMAX_DELAY);
+		vLedMsgPrint(&msg);
 		if(r != pdPASS)
 			continue;
 		if(msg.cmd != LED_CMD_DLY)
@@ -157,7 +159,7 @@ void vLed2DlyTask(void *pvParameters)
 			xLedMsgPack(&msg,LED_CMD_RSP,0,LED_ACK_DLY_OK,0,0);
 			r = xQueueSend(LedRspQueue,(void *)&msg,portMAX_DELAY);
 			if(r != pdPASS) {
-				vMsgPrint("vLed2DlyTask, semd msg failed\r\n",'s');
+				vMsgPrint("vLed2DlyTask, send msg failed\r\n",'s');
 			}
 		}
 	}
@@ -173,6 +175,7 @@ void vLed3DlyTask(void *pvParameters)
 
 	for(;;) {
 		r = xQueueReceive(Led3DlyQueue,(void *)&msg,portMAX_DELAY);
+		vLedMsgPrint(&msg);
 		if(r != pdPASS)
 			continue;
 		if(msg.cmd != LED_CMD_DLY)
@@ -193,7 +196,7 @@ void vLed3DlyTask(void *pvParameters)
 			xLedMsgPack(&msg,LED_CMD_RSP,0,0,LED_ACK_DLY_OK,0);
 			r = xQueueSend(LedRspQueue,(void *)&msg,portMAX_DELAY);
 			if(r != pdPASS) {
-				vMsgPrint("vLed3DlyTask, semd msg failed\r\n",'s');
+				vMsgPrint("vLed3DlyTask, send msg failed\r\n",'s');
 			}
 		}
 	}
@@ -215,7 +218,7 @@ void vLedCtrlTask(void *pvParameters)
 	xLedMsgPack(&MsgDly[2],LED_CMD_DLY,dly[0],dly[1],dly[2],dly[3]);
 
 	for(;;) {
-		r = xQueueSend(LedCmdQueue,(void *)&MsgCtrl[i],wait);
+		r = xQueueSend(LedDispQueue,(void *)&MsgCtrl[i],wait);
 		if(r != pdPASS) {
 			err = 0x01;
 			break;
@@ -238,6 +241,7 @@ void vLedCtrlTask(void *pvParameters)
 			break;
 		}
 		r = xQueueReceive(LedRspQueue,(void *)&MsgRsp,portMAX_DELAY);
+		vLedMsgPrint(&MsgRsp);
 		if(r != pdPASS) {
 			err = 0x04;
 			break;
@@ -258,9 +262,9 @@ int xLedTaskConstructor(void)
 
 	rprintf("depth = %d, width = %d, stk = %d\r\n",depth,width,stk);
 	// queues creattion
-	LedCmdQueue = xQueueCreate(depth,width);
-	if(LedCmdQueue == 0) {
-		rprintf("%s, create LedCmdQueue failed\n",__func__);
+	LedDispQueue = xQueueCreate(depth,width);
+	if(LedDispQueue == 0) {
+		rprintf("%s, create LedDispQueue failed\n",__func__);
 		return -1;
 	}
 	LedRspQueue = xQueueCreate(depth,width);
@@ -316,6 +320,3 @@ u16 CalCRC16(u8 *pdata,int size)
 {
 	return 0xabcd;
 }
-
-
-

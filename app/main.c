@@ -3,15 +3,6 @@
 #include <stm32f10x_system.h>
 #include <led.h>
 
-const char *logo = "0x12345678abcd";
-int a = 1;
-int b = 2;
-int c = 3;
-int array[10];
-
-void serial_loopback(void);
-void leds_on(void);
-
 void board_init(void)
 {
 	int r = 0;
@@ -58,6 +49,9 @@ void board_init(void)
 }
 
 #ifndef CONFIG_USE_FREERTOS
+void serial_loopback(void);
+void leds_on(void);
+
 int main(int argc, const char *argv[])
 {
 	int r;
@@ -75,7 +69,6 @@ int main(int argc, const char *argv[])
 	leds_on();
 	return c;
 }
-#endif
 
 void serial_loopback(void)
 {
@@ -104,12 +97,11 @@ void leds_on(void)
 	}
 }
 
-#ifdef CONFIG_USE_FREERTOS
+#else /* CONFIG_USE_FREERTOS defined */
+
 #include <ledtask.h>
-
-TaskStatus_t TskStatus;
-
 #if 0
+TaskStatus_t TskStatus;
 void vWatchTask(void *pvParameters)
 {
 	TaskStatus_t *pTskStatus = &TskStatus;
@@ -144,6 +136,7 @@ int main(int argc, const char *argv[])
 	vTaskStartScheduler();
 
 	for(;;);
+	return 0;
 }
 
 void vMsgPrint(void  *pvParameters,char c)
@@ -248,4 +241,4 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
 	taskDISABLE_INTERRUPTS();
 	for( ;; );
 }
-#endif
+#endif /* CONFIG_USE_FREERTOS */

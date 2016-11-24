@@ -7,12 +7,11 @@
 #define LED_MSG_LEN_SIZE	2
 #define LED_MSG_PL_SIZE		16
 #define LED_MSG_CRC_SIZE	2
-
 #define LED_MSG_SIZE	(LED_MSG_HEAD_SIZE + LED_MSG_CMD_SIZE	\
 			+ LED_MSG_LEN_SIZE + LED_MSG_PL_SIZE + LED_MSG_CRC_SIZE)
 
-#define LED_MSG_HEAD 0x45
-#define LED_PL_DUMMY 0xff
+#define LED_MSG_HEAD 0xAA
+#define LED_PL_DUMMY 0xFF
 
 enum LedMsgCmdType
 {
@@ -24,7 +23,7 @@ enum LedMsgCmdType
 
 enum LedMsgPLLType
 {
-	LED_PLL_ON = 6,
+	LED_PLL_ON  = 6,
 	LED_PLL_DLY = 6,
 	LED_PLL_RSP = 6,
 };
@@ -33,6 +32,37 @@ enum LedMsgAckType
 {
 	LED_ACK_DLY_OK = 0x51,
 };
+
+/*
+ * Led Message Formation
+ * -----------------------------------
+ * | head | cmd | len | payload |crc |
+ * -----------------------------------
+ * | 1B   | 1B  | 2B  | 16B     | 2B |
+ * -----------------------------------
+ *
+ * Tasks uses several messages for conresponding:
+ * (1) Led_On_Off_Msg:
+ * 	----------------------------------------------------------
+ *	| LED_MSG_HEAD | LED_CMD_ON | LED_PLL_ON | payload | CRC |
+ *	----------------------------------------------------------
+ *
+ * (2) Led_Delay_Msg:
+ * 	----------------------------------------------------------
+ *	| LED_MSG_HEAD | LED_CMD_DLY| LED_PLL_DLY| payload | CRC |
+ *	----------------------------------------------------------
+ *
+ * (3) Led_Response_Msg:
+ * 	----------------------------------------------------------
+ *	| LED_MSG_HEAD | LED_CMD_RSP| LED_PLL_RSP| payload | CRC |
+ *	----------------------------------------------------------
+ *
+ * The Payload field data:
+ * 	----------------------------------------------------------------------
+ *	| led1_id | data1 | led2_id | data2  | led3_id | data3 | 0xff...0xff |
+ *	----------------------------------------------------------------------
+ * Each message's length is fixed.
+ */
 
 struct LedMsgFmt
 {
@@ -49,7 +79,7 @@ extern TaskHandle_t Led2DlyHandle;
 extern TaskHandle_t Led3DlyHandle;
 extern TaskHandle_t LedCtrlHandle;
 
-extern QueueHandle_t LedCmdQueue;
+extern QueueHandle_t LedDispQueue;
 extern QueueHandle_t LedRspQueue;
 extern QueueHandle_t Led1DlyQueue;
 extern QueueHandle_t Led2DlyQueue;
