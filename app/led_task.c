@@ -87,13 +87,17 @@ void vLedDispTask(void *pvParameters)
 			else
 				led_light_off(led);
 		}
+		xLedMsgPack(&DispMsg,LED_CMD_RSP,LED_ACK_DLY_OK,0,0,0);
+		r = xQueueSend(LedRspQueue,(void *)&DispMsg,portMAX_DELAY);
+		if(r != pdPASS) {
+			vMsgPrint("vLedDispTask, send msg failed\r\n",'s');
+		}
 	}
 }
 
 void vLed1DlyTask(void *pvParameters)
 {
-	char *name = (char *)pvParameters;
-	TickType_t tick,i = 1;
+	TickType_t tick,i = 100;
 	unsigned int led,sec;
 	struct LedMsgFmt msg;
 	BaseType_t r;
@@ -102,16 +106,22 @@ void vLed1DlyTask(void *pvParameters)
 		r = xQueueReceive(Led1DlyQueue,(void *)&msg,portMAX_DELAY);
 		vLedMsgPrint(&msg);
 		if(r != pdPASS)
-		if(r != pdPASS)
 			continue;
 		if(msg.cmd != LED_CMD_DLY)
 			continue;
 		led = msg.pl[0];
 		sec = msg.pl[1];
+
+		xLedMsgPack(&msg,LED_CMD_RSP,LED_ACK_DLY_OK,0,0,0);
+		r = xQueueSend(LedRspQueue,(void *)&msg,portMAX_DELAY);
+		if(r != pdPASS) {
+			vMsgPrint("vLed1DlyTask, send msg failed\r\n",'s');
+		}
+
 		if((led != LED_PL_DUMMY) && (sec > 0)) {
 			do {
 				vTaskSuspendAll();
-				rprintf("%s: %d\r\n",name,sec);
+				rprintf("LED1: %d\r\n",sec);
 				xTaskResumeAll();
 
 				tick = xTaskGetTickCount();
@@ -130,8 +140,7 @@ void vLed1DlyTask(void *pvParameters)
 
 void vLed2DlyTask(void *pvParameters)
 {
-	char *name = (char *)pvParameters;
-	TickType_t tick,i = 1;
+	TickType_t tick,i = 100;
 	unsigned int led,sec;
 	struct LedMsgFmt msg;
 	BaseType_t r;
@@ -145,10 +154,17 @@ void vLed2DlyTask(void *pvParameters)
 			continue;
 		led = msg.pl[2];
 		sec = msg.pl[3];
+
+		xLedMsgPack(&msg,LED_CMD_RSP,0,LED_ACK_DLY_OK,0,0);
+		r = xQueueSend(LedRspQueue,(void *)&msg,portMAX_DELAY);
+		if(r != pdPASS) {
+			vMsgPrint("vLed2DlyTask, send msg failed\r\n",'s');
+		}
+
 		if((led != LED_PL_DUMMY) && (sec > 0)) {
 			do {
 				vTaskSuspendAll();
-				rprintf("%s: %d\r\n",name,sec);
+				rprintf("LED2: %d\r\n",sec);
 				xTaskResumeAll();
 
 				tick = xTaskGetTickCount();
@@ -167,8 +183,7 @@ void vLed2DlyTask(void *pvParameters)
 
 void vLed3DlyTask(void *pvParameters)
 {
-	char *name = (char *)pvParameters;
-	TickType_t tick,i = 1;
+	TickType_t tick,i = 100;
 	unsigned int led,sec;
 	struct LedMsgFmt msg;
 	BaseType_t r;
@@ -182,10 +197,17 @@ void vLed3DlyTask(void *pvParameters)
 			continue;
 		led = msg.pl[4];
 		sec = msg.pl[5];
+
+		xLedMsgPack(&msg,LED_CMD_RSP,0,0,LED_ACK_DLY_OK,0);
+		r = xQueueSend(LedRspQueue,(void *)&msg,portMAX_DELAY);
+		if(r != pdPASS) {
+			vMsgPrint("vLed3DlyTask, send msg failed\r\n",'s');
+		}
+
 		if((led != LED_PL_DUMMY) && (sec > 0)) {
 			do {
 				vTaskSuspendAll();
-				rprintf("%s: %d\r\n",name,sec);
+				rprintf("LED3: %d\r\n",sec);
 				xTaskResumeAll();
 
 				tick = xTaskGetTickCount();
@@ -207,9 +229,10 @@ void vLedCtrlTask(void *pvParameters)
 {
 	TickType_t TxWait = 10,RxWait = 5,IdleWait = 500,tick;
 	BaseType_t r;
-	int err = 0,dly[] = {50,40,30,0},i = 0,update;
+	int err = 0,dly[] = {5,4,3,0},i = 0,update;
 	struct LedMsgFmt MsgCtrl[3],MsgDly[3],MsgRsp;
 	struct LedMsgStateType state;
+	QueueHandle_t *pq[] = {Led1DlyQueue,Led2DlyQueue,Led3DlyQueue};
 
 	xLedMsgPack(&MsgCtrl[0],LED_CMD_ON,1,0,0,0);
 	xLedMsgPack(&MsgCtrl[1],LED_CMD_ON,0,1,0,0);
@@ -243,7 +266,7 @@ void vLedCtrlTask(void *pvParameters)
 			break;
 		case STATE_DLY:
 			vMsgPrint("STATE_DLY\r\n",'s');
-			r = xQueueSend(Led1DlyQueue,(void *)&MsgDly[i],TxWait);
+			r = xQueueSend(pq[i],(void *)&MsgDly[i],TxWait);
 			if(r != pdPASS) {
 				err = 0x02;
 				break;
@@ -296,7 +319,7 @@ void vLedCtrlTask(void *pvParameters)
 {
 	TickType_t wait = 10;
 	BaseType_t r;
-	int err = 0,dly[] = {50,40,30,0},i = 0;
+	int err = 0,dly[] = {500,400,300,0},i = 0;
 	struct LedMsgFmt MsgCtrl[3],MsgDly[3],MsgRsp;
 
 	xLedMsgPack(&MsgCtrl[0],LED_CMD_ON,1,0,0,0);
@@ -389,17 +412,17 @@ int xLedTaskConstructor(void)
 		rprintf("%s, create vLedDispTask failed\n",__func__);
 		return -1;
 	}
-	r = xTaskCreate(vLed1DlyTask,"vLed1DlyTask",stk,"LED1 ",2,&Led1DlyHandle);
+	r = xTaskCreate(vLed1DlyTask,"vLed1DlyTask",stk,NULL,2,&Led1DlyHandle);
 	if(r != pdPASS) {
 		rprintf("%s, create vLed1DlyTask failed\n",__func__);
 		return -1;
 	}
-	r = xTaskCreate(vLed2DlyTask,"vLed2DlyTask",stk,"LED2 ",2,&Led2DlyHandle);
+	r = xTaskCreate(vLed2DlyTask,"vLed2DlyTask",stk,NULL,2,&Led2DlyHandle);
 	if(r != pdPASS) {
 		rprintf("%s, create vLed2DlyTask failed\n",__func__);
 		return -1;
 	}
-	r = xTaskCreate(vLed3DlyTask,"vLed3DlyTask",stk,"LED3 ",2,&Led3DlyHandle);
+	r = xTaskCreate(vLed3DlyTask,"vLed3DlyTask",stk,NULL,2,&Led3DlyHandle);
 	if(r != pdPASS) {
 		rprintf("%s, create vLed3DlyTask failed\n",__func__);
 		return -1;
