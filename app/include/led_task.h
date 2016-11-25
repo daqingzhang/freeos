@@ -123,6 +123,9 @@ int xLedMsgNextStateGet(struct LedMsgStateType *state);
 int xLedMsgStateInit(struct LedMsgStateType *p);
 int xLedMsgStatePrint(struct LedMsgStateType *p);
 
+int xLedTaskConstructor(void);
+
+#if 0
 extern TaskHandle_t LedDispHandle;
 extern TaskHandle_t Led1DlyHandle;
 extern TaskHandle_t Led2DlyHandle;
@@ -134,7 +137,6 @@ extern QueueHandle_t LedRspQueue;
 extern QueueHandle_t Led1DlyQueue;
 extern QueueHandle_t Led2DlyQueue;
 extern QueueHandle_t Led3DlyQueue;
-
-int xLedTaskConstructor(void);
+#endif
 
 #endif /* __LEDTASK_H__ */

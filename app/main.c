@@ -100,6 +100,7 @@ void leds_on(void)
 #else /* CONFIG_USE_FREERTOS defined */
 
 #include <led_task.h>
+#include <key_task.h>
 #if 0
 TaskStatus_t TskStatus;
 void vWatchTask(void *pvParameters)
@@ -123,13 +124,19 @@ int main(int argc, const char *argv[])
 {
 	int r;
 
-	rprintf("sysclk: %d, apb1clk: %d, apb2clk: %d\r\n",
+	rprintf("SYSCLK: %d, APB1CLK: %d, APB2CLk: %d\r\n",
 		clktree.sysclk,clktree.apb1clk,clktree.apb2clk);
 
 	// led task construction
 	r = xLedTaskConstructor();
 	if(r) {
 		rprintf("%s, xLedTaskConstructor failed\n",__func__);
+		return -1;
+	}
+
+	r =xKeyTaskConstructor();
+	if(r) {
+		rprintf("%s, xKeyTaskConstructor failed\n",__func__);
 		return -1;
 	}
 	// call scheduler

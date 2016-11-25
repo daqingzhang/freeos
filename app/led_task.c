@@ -229,18 +229,14 @@ void vLedCtrlTask(void *pvParameters)
 {
 	TickType_t TxWait = 10,RxWait = 5,IdleWait = 500,tick;
 	BaseType_t r;
-	int err = 0,dly[] = {5,4,3,0},i = 0,update;
-	struct LedMsgFmt MsgCtrl[3],MsgDly[3],MsgRsp;
+	int err,i,update;
 	struct LedMsgStateType state;
+	struct LedMsgFmt MsgCtrl[3],MsgDly,MsgRsp;
 	QueueHandle_t *pq[] = {Led1DlyQueue,Led2DlyQueue,Led3DlyQueue};
 
 	xLedMsgPack(&MsgCtrl[0],LED_CMD_ON,1,0,0,0);
 	xLedMsgPack(&MsgCtrl[1],LED_CMD_ON,0,1,0,0);
 	xLedMsgPack(&MsgCtrl[2],LED_CMD_ON,0,0,1,0);
-
-	xLedMsgPack(&MsgDly[0],LED_CMD_DLY,dly[0],dly[1],dly[2],dly[3]);
-	xLedMsgPack(&MsgDly[1],LED_CMD_DLY,dly[0],dly[1],dly[2],dly[3]);
-	xLedMsgPack(&MsgDly[2],LED_CMD_DLY,dly[0],dly[1],dly[2],dly[3]);
 
 	r = 0;
 	i = 0;
@@ -266,7 +262,8 @@ void vLedCtrlTask(void *pvParameters)
 			break;
 		case STATE_DLY:
 			vMsgPrint("STATE_DLY\r\n",'s');
-			r = xQueueSend(pq[i],(void *)&MsgDly[i],TxWait);
+			xLedMsgPack(&MsgDly,LED_CMD_DLY,5,4,3,0);
+			r = xQueueSend(pq[i],(void *)&MsgDly,TxWait);
 			if(r != pdPASS) {
 				err = 0x02;
 				break;

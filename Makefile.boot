@@ -96,12 +96,14 @@ C_OBJS_DEV := \
 	./$(OS_DEVICE_SRC)/string.o	\
 	./$(OS_DEVICE_SRC)/serial.o	\
 	./$(OS_DEVICE_SRC)/timer.o	\
+	./$(OS_DEVICE_SRC)/key.o	\
 	./$(OS_DEVICE_SRC)/led.o
 
 C_OBJS_APP := \
 	./$(APPDIR)/main.o \
 	./$(APPDIR)/led_fsm.o \
-	./$(APPDIR)/led_task.o
+	./$(APPDIR)/led_task.o \
+	./$(APPDIR)/key_task.o
 
 C_OBJS_OS := \
 	./$(OS_FREEOS_MEM)/heap_2.o	\
