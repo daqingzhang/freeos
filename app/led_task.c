@@ -369,9 +369,9 @@ void vLedCtrlTask(void *pvParameters)
 int xLedTaskConstructor(void)
 {
 	BaseType_t r;
-	int depth = 4,stk = 512,width = sizeof(struct LedMsgFmt);
+	int depth = 4,stk = 256,width = sizeof(struct LedMsgFmt);
 
-	rprintf("depth = %d, width = %d, stk = %d\r\n",depth,width,stk);
+	rprintf("%s, depth = %d, width = %d, stk = %d\r\n",__func__,depth,width,stk);
 	// queues creattion
 	LedDispQueue = xQueueCreate(depth,width);
 	if(LedDispQueue == 0) {

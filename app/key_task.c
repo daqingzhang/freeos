@@ -21,7 +21,7 @@ void vKeyGetTask(void *pvParameters)
 			continue;
 		}
 		cnt++;
-		if(cnt < 3)
+		if(cnt < 6)
 			continue;
 		cnt = 0;
 
@@ -71,8 +71,9 @@ void vKeyPrcTask(void *pvParameters)
 int xKeyTaskConstructor(void)
 {
 	BaseType_t r;
-	int depth = 20,width = 1,stk = 512;
+	int depth = 10,width = 1,stk = 256;
 
+	rprintf("%s, depth = %d, width = %d, stk = %d\r\n",__func__,depth,width,stk);
 	// create queue
 	KeyPrcQueue = xQueueCreate(depth,width);
 	if(KeyPrcQueue == 0) {
