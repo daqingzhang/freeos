@@ -10,6 +10,7 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
+#include <semphr.h>
 
 void vMsgPrint(void  *pvParameters,char c);
 u16 CalCRC16(u8 *pdata,int size);

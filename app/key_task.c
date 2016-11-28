@@ -2,9 +2,28 @@
 #include <key.h>
 #include <key_task.h>
 
-TaskHandle_t KeyGetHandle;
-TaskHandle_t KeyPrcHandle;
-QueueHandle_t KeyPrcQueue;
+TaskHandle_t KeyGetHandle = NULL;
+TaskHandle_t KeyPrcHandle = NULL;
+TaskHandle_t KeyWthHandle = NULL;
+QueueHandle_t KeyPrcQueue = NULL;
+SemaphoreHandle_t KeyPresSema = NULL;
+
+void vKeyWatcherTask(void *pvParameters)
+{
+	BaseType_t r;
+
+	for(;;) {
+		r = xSemaphoreTake(KeyPresSema,portMAX_DELAY);
+
+		vTaskSuspendAll();
+		if(r == pdTRUE) {
+			rprintf("%s, key sema taken\r\n",__func__);
+		} else {
+			rprintf("%s, key sema taken failed\r\n",__func__);
+		}
+		xTaskResumeAll();
+	}
+}
 
 void vKeyGetTask(void *pvParameters)
 {
@@ -35,9 +54,16 @@ void vKeyGetTask(void *pvParameters)
 
 static void vKeyPrcFunction(u32 key)
 {
+	BaseType_t r;
+
 	vTaskSuspendAll();
 	rprintf("%s, process key %x\n",__func__,key);
 	xTaskResumeAll();
+
+	r = xSemaphoreGive(KeyPresSema);
+	if(r != pdTRUE) {
+		vMsgPrint("vKeyPrcFunction, give a sema failed\r\n",'s');
+	}
 }
 
 void vKeyPrcTask(void *pvParameters)
@@ -80,6 +106,11 @@ int xKeyTaskConstructor(void)
 		rprintf("%s, create KeyPrcQueue failed\r\n",__func__);
 		return -1;
 	}
+	KeyPresSema = xSemaphoreCreateBinary();
+	if(KeyPresSema == NULL) {
+		rprintf("%s, create KeyPresSema failed\r\n",__func__);
+		return -1;
+	}
 	// create task
 	r = xTaskCreate(vKeyGetTask,"vKeyGetTask",stk,NULL,2,&KeyGetHandle);
 	if(r != pdPASS) {
@@ -89,6 +120,11 @@ int xKeyTaskConstructor(void)
 	r = xTaskCreate(vKeyPrcTask,"vKeyPrcTask",stk,NULL,2,&KeyPrcHandle);
 	if(r != pdPASS) {
 		rprintf("%s, create vKeyPrcTask failed\r\n",__func__);
+		return -1;
+	}
+	r = xTaskCreate(vKeyWatcherTask,"vKeyWatcher",stk,NULL,2,&KeyWthHandle);
+	if(r != pdPASS) {
+		rprintf("%s, create vKeyWatcherTask failed\r\n",__func__);
 		return -1;
 	}
 	return 0;
