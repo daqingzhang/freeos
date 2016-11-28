@@ -97,6 +97,7 @@ C_OBJS_DEV := \
 	./$(OS_DEVICE_SRC)/serial.o	\
 	./$(OS_DEVICE_SRC)/timer.o	\
 	./$(OS_DEVICE_SRC)/key.o	\
+	./$(OS_DEVICE_SRC)/motor.o	\
 	./$(OS_DEVICE_SRC)/led.o
 
 C_OBJS_APP := \

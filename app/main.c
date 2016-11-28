@@ -2,6 +2,10 @@
 #include <common.h>
 #include <stm32f10x_system.h>
 #include <led.h>
+#include <key.h>
+#include <motor.h>
+
+//#define CONFIG_MOTOR_TEST
 
 void board_init(void)
 {
@@ -42,7 +46,11 @@ void board_init(void)
 	led_init(LED1|LED2|LED3);
 
 	// config KEY
-
+	key_init(KEY2_ID | KEY3_ID | KEY4_ID);
+#ifdef CONFIG_MOTOR_TEST
+	// init motor
+	motor_init();
+#endif
 	// enable gloabl interrupts
 	__enable_irq();
 	rprintf("%s done! \r\n",__func__);
@@ -127,13 +135,16 @@ int main(int argc, const char *argv[])
 	rprintf("SYSCLK: %d, APB1CLK: %d, APB2CLk: %d\r\n",
 		clktree.sysclk,clktree.apb1clk,clktree.apb2clk);
 
+#ifdef CONFIG_MOTOR_TEST
+	motor_test();
+#endif
+
 	// led task construction
 	r = xLedTaskConstructor();
 	if(r) {
 		rprintf("%s, xLedTaskConstructor failed\n",__func__);
 		return -1;
 	}
-
 	r =xKeyTaskConstructor();
 	if(r) {
 		rprintf("%s, xKeyTaskConstructor failed\n",__func__);
