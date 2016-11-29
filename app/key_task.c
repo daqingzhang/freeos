@@ -57,7 +57,7 @@ static void vKeyPrcFunction(u32 key)
 	BaseType_t r;
 
 	vTaskSuspendAll();
-	rprintf("%s, process key %x\n",__func__,key);
+	rprintf("%s, process key %x\r\n",__func__,key);
 	xTaskResumeAll();
 
 	r = xSemaphoreGive(KeyPresSema);
@@ -97,10 +97,12 @@ void vKeyPrcTask(void *pvParameters)
 int xKeyTaskConstructor(void)
 {
 	BaseType_t r;
-	int depth = 10,width = 1,stk = 256;
+	int depth = 10,width = 4,stk = 256;
 
 	rprintf("%s, depth = %d, width = %d, stk = %d\r\n",__func__,depth,width,stk);
 	// create queue
+	// queue width is the number of bytes, key value is a 32 bits number,
+	// so the width is 4.
 	KeyPrcQueue = xQueueCreate(depth,width);
 	if(KeyPrcQueue == 0) {
 		rprintf("%s, create KeyPrcQueue failed\r\n",__func__);
