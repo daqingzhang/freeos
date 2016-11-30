@@ -125,13 +125,13 @@ int xLedMsgStatePrint(struct LedMsgStateType *p);
 
 int xLedTaskConstructor(void);
 
-#if 0
 extern TaskHandle_t LedDispHandle;
 extern TaskHandle_t Led1DlyHandle;
 extern TaskHandle_t Led2DlyHandle;
 extern TaskHandle_t Led3DlyHandle;
 extern TaskHandle_t LedCtrlHandle;
 
+#if 0
 extern QueueHandle_t LedDispQueue;
 extern QueueHandle_t LedRspQueue;
 extern QueueHandle_t Led1DlyQueue;

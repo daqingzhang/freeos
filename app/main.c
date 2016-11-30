@@ -205,6 +205,93 @@ void vMsgPrint(void  *pvParameters,char c)
 	}
 }
 
+struct TaskStateType
+{
+	const char	*name;
+	u32		s;
+};
+
+struct TaskInfoType
+{
+	const char	*name;
+	u32		state[TASK_STATUS_NUM];
+	TaskHandle_t	handle;
+};
+
+struct TaskInfo AppTasks[TASK_NUM] = {
+	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
+	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
+	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
+	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
+	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
+	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
+	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
+	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
+};
+
+TaskHandle_t xAppTaskHandleTable[] = {
+	LedDispHandle,
+	Led1DlyHandle,
+	Led2DlyHandle,
+	Led3DlyHandle,
+	LedCtrlHandle,
+	KeyGetHandle,
+	KeyPrcHandle,
+	KeyWthHandle,
+};
+
+#define	TASK_NUM 8
+#define TASK_STATUS_NUM 6
+
+u32 uAppTaskTickNum = 0;
+u32 uAppTaskTickCnt = 0;
+u32 uAppTaskStateTable[TASK_NUM][TASK_STATUS_NUM] = {0};
+
+void vTaskInfoCollector(void)
+{
+	int i,state,err = 0;
+	TaskHandle_t pHandle;
+
+	for(i = 0;i < TASK_NUM;i++) {
+		pHandle = xAppTaskHandleTable[i];
+		state = eTaskGetState(pHandle);
+		if(state >= TASK_STATUS_NUM) {
+			vTaskSuspendAll();
+			rprintf("vTaskInfoCollector, error %d !\r\n",state);
+			xTaskResumeAll();
+			err = 1;
+			break;
+		}
+		uAppTaskStateTable[i][state] += 1;
+		uAppTaskTickNum++;
+		uAppTaskTickCnt++;
+	}
+
+	if(err) {
+		taskDISABLE_INTERRUPTS();
+		for( ;; );
+	}
+}
+
+void vCollectorTask(void)
+{
+	if(uAppTaskTickCnt > 1000) {
+		int i,j;
+
+		uAppTaskTickCnt = 0;
+
+		vTaskSuspendAll();
+		rprintf("\r\n");
+		for(i = 0;i < TASK_NUM;i++) {
+			for(j = 0;j < TASK_STATUS_NUM;j++) {
+				rprintf("%d\t",uAppTaskStateTable[i][j]);
+			}
+			rprintf("\r\n");
+		}
+		xTaskResumeAll();
+	}
+}
+
 /*
  * vApplicationTickHook - if configUSE_TICK_HOOK is set 1, this
  * subroutine will be called.
