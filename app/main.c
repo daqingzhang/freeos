@@ -128,6 +128,8 @@ void vWatchTask(void *pvParameters)
 }
 #endif
 
+void vTaskInfoInit(void);
+
 int main(int argc, const char *argv[])
 {
 	int r;
@@ -150,6 +152,9 @@ int main(int argc, const char *argv[])
 		rprintf("%s, xKeyTaskConstructor failed\n",__func__);
 		return -1;
 	}
+
+	vTaskInfoInit();
+
 	// call scheduler
 	vTaskStartScheduler();
 
@@ -205,91 +210,129 @@ void vMsgPrint(void  *pvParameters,char c)
 	}
 }
 
+#define TASK_STATUS_NUM 6
+
 struct TaskStateType
 {
 	const char	*name;
-	u32		s;
+	u32		cnt;
 };
 
 struct TaskInfoType
 {
-	const char	*name;
-	u32		state[TASK_STATUS_NUM];
-	TaskHandle_t	handle;
+	const char *name;
+	struct TaskStateType state[TASK_STATUS_NUM];
+	TaskHandle_t handle;
 };
 
-struct TaskInfo AppTasks[TASK_NUM] = {
-	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
-	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
-	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
-	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
-	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
-	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
-	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
-	{.name = "Running",.state = {0,0,0,0,0,0},.handle = LedDispHandle},
+#define INIT_TASK_STATE(_name,_cnt) 	\
+	{				\
+		.name = _name,		\
+		.cnt = _cnt		\
+	}
+
+
+#define INIT_TASK_INFO(_name)		\
+	{				\
+		.name = _name,		\
+		.handle = NULL,		\
+		.state = 		\
+			{		\
+				INIT_TASK_STATE("running"  ,0),	\
+				INIT_TASK_STATE("ready"    ,0),	\
+				INIT_TASK_STATE("blocked"  ,0),	\
+				INIT_TASK_STATE("suspended",0),	\
+				INIT_TASK_STATE("deleted"  ,0),	\
+				INIT_TASK_STATE("invalid"  ,0),	\
+			},					\
+	}
+
+struct TaskInfoType AppTasks[] =
+{
+	INIT_TASK_INFO("LedDispTask"),
+	INIT_TASK_INFO("Led1DlyTask"),
+	INIT_TASK_INFO("Led2DlyTask"),
+	INIT_TASK_INFO("Led3DlyTask"),
+	INIT_TASK_INFO("LedCtrlTask"),
+	INIT_TASK_INFO("KeyGetTask" ),
+	INIT_TASK_INFO("KeyPrcTask" ),
+	INIT_TASK_INFO("KeyWthTask" ),
 };
 
-TaskHandle_t xAppTaskHandleTable[] = {
-	LedDispHandle,
-	Led1DlyHandle,
-	Led2DlyHandle,
-	Led3DlyHandle,
-	LedCtrlHandle,
-	KeyGetHandle,
-	KeyPrcHandle,
-	KeyWthHandle,
-};
+unsigned int uAppTaskTickNum = 0;
+unsigned long long uAppTaskTickCnt = 0;
 
-#define	TASK_NUM 8
-#define TASK_STATUS_NUM 6
+void vTaskInfoInit(void)
+{
+	struct TaskInfoType *pt = AppTasks;
+	int i = 0;
 
-u32 uAppTaskTickNum = 0;
-u32 uAppTaskTickCnt = 0;
-u32 uAppTaskStateTable[TASK_NUM][TASK_STATUS_NUM] = {0};
+	pt[i++].handle = LedDispHandle;
+	pt[i++].handle = Led1DlyHandle;
+	pt[i++].handle = Led2DlyHandle;
+	pt[i++].handle = Led3DlyHandle;
+	pt[i++].handle = LedCtrlHandle;
+	pt[i++].handle = KeyGetHandle;
+	pt[i++].handle = KeyPrcHandle;
+	pt[i++].handle = KeyWthHandle;
+/*	rprintf("%s, LedDispHandle = %x, pt[0].handle = %x\r\n",
+		__func__,LedDispHandle, pt[0].handle);
+*/
+}
 
 void vTaskInfoCollector(void)
 {
-	int i,state,err = 0;
-	TaskHandle_t pHandle;
+	int i,j,err = 0;
+	struct TaskInfoType *pt;
+	struct TaskStateType *ps;
 
-	for(i = 0;i < TASK_NUM;i++) {
-		pHandle = xAppTaskHandleTable[i];
-		state = eTaskGetState(pHandle);
-		if(state >= TASK_STATUS_NUM) {
+	for(i = 0;i < ARRAY_SIZE(AppTasks);i++) {
+		pt = AppTasks + i;
+		ps = pt->state;
+
+		j = eTaskGetState(pt->handle);
+		if(j >= TASK_STATUS_NUM) {
 			vTaskSuspendAll();
-			rprintf("vTaskInfoCollector, error %d !\r\n",state);
+			rprintf("vTaskInfoCollector, error %d !\r\n",j);
 			xTaskResumeAll();
 			err = 1;
 			break;
 		}
-		uAppTaskStateTable[i][state] += 1;
+		ps[j].cnt++;
+
 		uAppTaskTickNum++;
 		uAppTaskTickCnt++;
 	}
-
 	if(err) {
 		taskDISABLE_INTERRUPTS();
 		for( ;; );
 	}
 }
 
-void vCollectorTask(void)
+void vTaskInfoPrinter(void)
 {
-	if(uAppTaskTickCnt > 1000) {
-		int i,j;
+	int i;
+	struct TaskInfoType *pt;
+	struct TaskStateType *ps;
 
-		uAppTaskTickCnt = 0;
+	if(uAppTaskTickNum < 1000)
+		return;
+	uAppTaskTickNum = 0;
 
-		vTaskSuspendAll();
+	vTaskSuspendAll();
+	rprintf("\r\n");
+	for(i = 0;i < ARRAY_SIZE(AppTasks);i++) {
+		pt = AppTasks + i;
+		ps = pt->state;
+		rprintf("%s\t, %s = %d\t, %s = %d\t,%s = %d\t,"
+			"%s = %d\t, %s = %d\t, %s = %d\r\n",
+			pt->name,
+			ps[0].name,ps[0].cnt,ps[1].name,ps[1].cnt,
+			ps[2].name,ps[2].cnt,ps[3].name,ps[3].cnt,
+			ps[4].name,ps[4].cnt,ps[5].name,ps[5].cnt);
 		rprintf("\r\n");
-		for(i = 0;i < TASK_NUM;i++) {
-			for(j = 0;j < TASK_STATUS_NUM;j++) {
-				rprintf("%d\t",uAppTaskStateTable[i][j]);
-			}
-			rprintf("\r\n");
-		}
-		xTaskResumeAll();
 	}
+	xTaskResumeAll();
 }
 
 /*
@@ -298,7 +341,7 @@ void vCollectorTask(void)
  */
 void vApplicationTickHook( void )
 {
-
+	vTaskInfoCollector();
 }
 
 /* vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
@@ -313,7 +356,7 @@ void vApplicationTickHook( void )
  */
 void vApplicationIdleHook( void )
 {
-    
+	vTaskInfoPrinter();
 }
 
 /* vApplicationMallocFailedHook() will only be called if
