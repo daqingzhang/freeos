@@ -4,14 +4,10 @@
 #include <motor.h>
 
 #define MTR_GPIOA	GPIOA
-#define MTR_ENA		GPIO_Pin_4
-#define MTR_IN1		GPIO_Pin_5
-#define MTR_IN2		GPIO_Pin_6
-
-#define MTR_GPIOB	GPIOB
-#define MTR_ENB		GPIO_Pin_0
-#define MTR_IN3		GPIO_Pin_1
-#define MTR_IN4		GPIO_Pin_2
+#define MTR_IN1		GPIO_Pin_4
+#define MTR_IN2		GPIO_Pin_5
+#define MTR_IN3		GPIO_Pin_6
+#define MTR_IN4		GPIO_Pin_7
 
 void motor_init(void)
 {
@@ -19,7 +15,7 @@ void motor_init(void)
 	unsigned int  pin = 0;
 
 	//GPIOA
-	pin = (MTR_ENA | MTR_IN1 | MTR_IN2);
+	pin = (MTR_IN1 | MTR_IN2 | MTR_IN3 | MTR_IN4);
 
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA,ENABLE);
 	Init.GPIO_Pin = (unsigned short)pin;
@@ -28,69 +24,78 @@ void motor_init(void)
 	GPIO_Init(MTR_GPIOA,&Init);
 
 	GPIO_WriteBit(MTR_GPIOA,pin,Bit_RESET);
-
-	//GPIOB
-	pin = (MTR_ENB | MTR_IN3 | MTR_IN4);
-
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB,ENABLE);
-	Init.GPIO_Pin = (unsigned short)pin;
-	Init.GPIO_Mode = GPIO_Mode_Out_PP;
-	Init.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(MTR_GPIOB,&Init);
-
-	GPIO_WriteBit(MTR_GPIOB,pin,Bit_RESET);
 	rprintf("%s done!\r\n",__func__);
 }
 
-void sdelay(int sec)
+static u32 motor_dly = 500;
+
+static void motor_step(int in1, int in2, int in3, int in4)
 {
-	while(sec--) {
-		mdelay(200);
-		mdelay(200);
-		mdelay(200);
-		mdelay(200);
-		mdelay(200);
-	}
+	GPIO_WriteBit(MTR_GPIOA,MTR_IN1,in1);
+	GPIO_WriteBit(MTR_GPIOA,MTR_IN2,in2);
+	GPIO_WriteBit(MTR_GPIOA,MTR_IN3,in3);
+	GPIO_WriteBit(MTR_GPIOA,MTR_IN4,in4);
+	mdelay(motor_dly);
+}
+
+static void motor_brake(void)
+{
+	motor_dly = 1;
+	motor_step(0,0,0,0);
+	motor_step(0,0,0,0);
+	motor_step(0,0,0,0);
+	motor_step(0,0,0,0);
+}
+
+void motor_rotate_clkwise(u32 dly)
+{
+	motor_dly = dly;
+	motor_step(1,0,0,0);
+	motor_step(0,0,1,0);
+	motor_step(0,1,0,0);
+	motor_step(0,0,0,1);
+}
+
+void motor_rotate_counter_clkwise(u32 dly)
+{
+	motor_dly = dly;
+	motor_step(0,0,0,1);
+	motor_step(0,1,0,0);
+	motor_step(0,0,1,0);
+	motor_step(1,0,0,0);
+}
+
+void motor_step8_rotate(u32 dly)
+{
+	motor_dly = dly;
+
+	motor_step(1,0,0,0);
+	motor_step(1,0,1,0);
+	motor_step(0,0,1,0);
+	motor_step(0,1,1,0);
+	motor_step(0,1,0,0);
+	motor_step(0,1,0,1);
+	motor_step(0,0,0,1);
+	motor_step(1,0,0,1);
 }
 
 void motor_test(void)
 {
-	int i=500;
-	u16 motor_pins[] = {MTR_IN1,MTR_IN2,MTR_IN3,MTR_IN4};
-//	u16 motor_val1[] = {1,0,0,0};
+	u32 i,cnt = 50;
+	u32 dly = 500;
 
-	// enable
-	GPIO_WriteBit(MTR_GPIOA,MTR_ENA,Bit_RESET);
-	GPIO_WriteBit(MTR_GPIOB,MTR_ENB,Bit_RESET);
 	while(1) {
-		//EN1 = 1, EN2 = 0, EN3 = 0, EN4 = 0
-		rprintf("phase 1\r\n");
-		GPIO_WriteBit(MTR_GPIOA,motor_pins[0],1);
-		GPIO_WriteBit(MTR_GPIOA,motor_pins[1],0);
-		GPIO_WriteBit(MTR_GPIOB,motor_pins[2],0);
-		GPIO_WriteBit(MTR_GPIOB,motor_pins[3],0);
-		mdelay(i);
 
-		rprintf("phase 2\r\n");
-		GPIO_WriteBit(MTR_GPIOA,motor_pins[0],0);
-		GPIO_WriteBit(MTR_GPIOA,motor_pins[1],1);
-		GPIO_WriteBit(MTR_GPIOB,motor_pins[2],0);
-		GPIO_WriteBit(MTR_GPIOB,motor_pins[3],0);
-		mdelay(i);
-#if 1
-		rprintf("phase 3\r\n");
-		GPIO_WriteBit(MTR_GPIOA,motor_pins[0],0);
-		GPIO_WriteBit(MTR_GPIOA,motor_pins[1],0);
-		GPIO_WriteBit(MTR_GPIOB,motor_pins[2],1);
-		GPIO_WriteBit(MTR_GPIOB,motor_pins[3],0);
-		mdelay(i);
-	
-		rprintf("phase 4\r\n");
-		GPIO_WriteBit(MTR_GPIOA,motor_pins[0],0);
-		GPIO_WriteBit(MTR_GPIOA,motor_pins[1],0);
-		GPIO_WriteBit(MTR_GPIOB,motor_pins[2],0);
-		GPIO_WriteBit(MTR_GPIOB,motor_pins[3],1);
-		mdelay(i);
+		for(i = 0;i < cnt;i++)
+			//motor_rotate_clkwise(dly);
+			//motor_rotate_counter_clkwise(dly);
+			motor_step8_rotate(dly);
+		motor_brake();
+		break;
+#if 0
+		for(i = 0;i < cnt;i++)
+			motor_rotate_counter_clkwise(dly);
+		motor_brake();
 #endif
 	}
 }

@@ -5,7 +5,7 @@
 #include <key.h>
 #include <motor.h>
 
-//#define CONFIG_MOTOR_TEST
+#define CONFIG_MOTOR_TEST
 
 void board_init(void)
 {
@@ -139,8 +139,7 @@ int main(int argc, const char *argv[])
 
 #ifdef CONFIG_MOTOR_TEST
 	motor_test();
-#endif
-
+#else
 	// led task construction
 	r = xLedTaskConstructor();
 	if(r) {
@@ -157,7 +156,7 @@ int main(int argc, const char *argv[])
 
 	// call scheduler
 	vTaskStartScheduler();
-
+#endif
 	for(;;);
 	return 0;
 }
