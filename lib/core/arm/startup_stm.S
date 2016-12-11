@@ -112,7 +112,7 @@ clrbss_s:
 	cmp	r1, r2
 	beq	clrbss_e
 	stmia	r1!,{r0}
-	b clrbss_s
+	b	clrbss_s
 clrbss_e:
 	mov	r1,r0
 	mov	r2,r0

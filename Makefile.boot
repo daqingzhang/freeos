@@ -1,7 +1,8 @@
 CHIP		:= stm32f10x
 CORE		:= arm
 OS		:= FreeRTOS
-OS_ARCH		:= ARM_CM3
+ARCH		:= ARM_CM3
+
 #==============================================================================
 # DIRECTORY
 #==============================================================================
@@ -24,7 +25,7 @@ OS_DEVICE_SRC	:= $(OSDIR)/device/$(CHIP)
 OS_FREEOS_CFG	:= $(OSDIR)/$(OS)/config
 OS_FREEOS_INC	:= $(OSDIR)/$(OS)/Source/include
 OS_FREEOS_SRC	:= $(OSDIR)/$(OS)/Source
-OS_FREEOS_PORT	:= $(OSDIR)/$(OS)/Source/portable/GCC/$(OS_ARCH)
+OS_FREEOS_PORT	:= $(OSDIR)/$(OS)/Source/portable/GCC/$(ARCH)
 OS_FREEOS_MEM	:= $(OSDIR)/$(OS)/Source/portable/MemMang
 
 INCS		:= -I$(LIB_INC)
@@ -120,15 +121,6 @@ C_OBJS	:= $(C_OBJS_LIB) \
 	$(C_OBJS_DEV) 	\
 	$(C_OBJS_APP)	\
 	$(C_OBJS_OS)	\
-
-#./$(LIB_BOARD_SRC)/system_stm32f10x.o	\
-#./$(LIB_BOARD_SRC)/stm32f10x_gpio.o	\
-#./$(LIB_BOARD_SRC)/stm32f10x_tim.o	\
-#./$(LIB_BOARD_SRC)/stm32f10x_i2c.o	\
-#./$(LIB_BOARD_SRC)/stm32f10x_usart.o	\
-#./$(LIB_BOARD_SRC)/stm32f10x_rcc.o	\
-#./$(LIB_BOARD_SRC)/stm32f10x_flash.o	\
-#./$(LIB_BOARD_SRC)/stm32f10x_pwr.o   	\
 
 #==============================================================================
 # SECTIONS
