@@ -34,19 +34,25 @@ SECTIONS
 		*(.gnu.linkonce.armexidx.*)
 	} >flash
 
+	.rel.dyn : {
+		. = ALIGN(4);
+		__reldyn_start__ = . ;
+		*(.rel*)
+		. = ALIGN(4);
+		__reldyn_end__ = . ;
+	} >flash
 	__rodata_end__ = . ;
 	__flash_end__ = . ;
 
-	.data : {
-		__data_start__ = . ;
+	.data : AT (__rodata_end__) {
 		. = ALIGN(4);
-
+		__data_start__ = . ;
 		*(.data .data.*)
 		*(.ram)
 		*(.ramfunc*)
 		. = ALIGN(4);
 		__data_end__ = . ;
-	} >ram AT>flash
+	} >ram /* AT>flash */
 
 	.bss (NOLOAD) : {
 		__bss_start__ = . ;
