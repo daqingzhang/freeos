@@ -99,10 +99,13 @@ C_OBJS_DEV := \
 	./$(OS_DEVICE_SRC)/timer.o	\
 	./$(OS_DEVICE_SRC)/key.o	\
 	./$(OS_DEVICE_SRC)/motor.o	\
+	./$(OS_DEVICE_SRC)/infrared.o	\
 	./$(OS_DEVICE_SRC)/led.o
 
 C_OBJS_APP := \
 	./$(APPDIR)/main.o \
+	./$(APPDIR)/test.o \
+	./$(APPDIR)/hook.o \
 	./$(APPDIR)/led_fsm.o \
 	./$(APPDIR)/led_task.o \
 	./$(APPDIR)/key_task.o

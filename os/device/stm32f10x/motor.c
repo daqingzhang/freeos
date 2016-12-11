@@ -9,10 +9,12 @@
 #define MTR_IN3		GPIO_Pin_6
 #define MTR_IN4		GPIO_Pin_7
 
+static void motor_step(int in1, int in2, int in3, int in4);
+
 void motor_init(void)
 {
-	GPIO_InitTypeDef Init;
 	unsigned int  pin = 0;
+	GPIO_InitTypeDef Init;
 
 	//GPIOA
 	pin = (MTR_IN1 | MTR_IN2 | MTR_IN3 | MTR_IN4);
@@ -27,7 +29,13 @@ void motor_init(void)
 	rprintf("%s done!\r\n",__func__);
 }
 
-static u32 motor_dly = 500;
+void motor_brake(void)
+{
+	motor_step(0,0,0,0);
+	motor_step(0,0,0,0);
+	motor_step(0,0,0,0);
+	motor_step(0,0,0,0);
+}
 
 static void motor_step(int in1, int in2, int in3, int in4)
 {
@@ -35,67 +43,66 @@ static void motor_step(int in1, int in2, int in3, int in4)
 	GPIO_WriteBit(MTR_GPIOA,MTR_IN2,in2);
 	GPIO_WriteBit(MTR_GPIOA,MTR_IN3,in3);
 	GPIO_WriteBit(MTR_GPIOA,MTR_IN4,in4);
-	mdelay(motor_dly);
 }
 
-static void motor_brake(void)
+static void motor_rotate_step4(int clockwise)
 {
-	motor_dly = 1;
-	motor_step(0,0,0,0);
-	motor_step(0,0,0,0);
-	motor_step(0,0,0,0);
-	motor_step(0,0,0,0);
+	if(clockwise) {
+		motor_step(1,0,0,0);
+		motor_step(0,0,1,0);
+		motor_step(0,1,0,0);
+		motor_step(0,0,0,1);
+	} else {
+		motor_step(0,0,0,1);
+		motor_step(0,1,0,0);
+		motor_step(0,0,1,0);
+		motor_step(1,0,0,0);
+	}
 }
 
-void motor_rotate_clkwise(u32 dly)
+static void motor_rotate_step8(int clockwise)
 {
-	motor_dly = dly;
-	motor_step(1,0,0,0);
-	motor_step(0,0,1,0);
-	motor_step(0,1,0,0);
-	motor_step(0,0,0,1);
+	if(clockwise) {
+		motor_step(1,0,0,0);
+		motor_step(1,0,1,0);
+		motor_step(0,0,1,0);
+		motor_step(0,1,1,0);
+		motor_step(0,1,0,0);
+		motor_step(0,1,0,1);
+		motor_step(0,0,0,1);
+		motor_step(1,0,0,1);
+	} else {
+		motor_step(1,0,0,1);
+		motor_step(0,0,0,1);
+		motor_step(0,1,0,1);
+		motor_step(0,1,0,0);
+		motor_step(0,1,1,0);
+		motor_step(0,0,1,0);
+		motor_step(1,0,1,0);
+		motor_step(1,0,0,0);
+	}
 }
 
-void motor_rotate_counter_clkwise(u32 dly)
+void motor_rotate(int step8, int clockwise)
 {
-	motor_dly = dly;
-	motor_step(0,0,0,1);
-	motor_step(0,1,0,0);
-	motor_step(0,0,1,0);
-	motor_step(1,0,0,0);
-}
-
-void motor_step8_rotate(u32 dly)
-{
-	motor_dly = dly;
-
-	motor_step(1,0,0,0);
-	motor_step(1,0,1,0);
-	motor_step(0,0,1,0);
-	motor_step(0,1,1,0);
-	motor_step(0,1,0,0);
-	motor_step(0,1,0,1);
-	motor_step(0,0,0,1);
-	motor_step(1,0,0,1);
+	if(step8)
+		motor_rotate_step8(clockwise);
+	else
+		motor_rotate_step4(clockwise);
 }
 
 void motor_test(void)
 {
 	u32 i,cnt = 50;
-	u32 dly = 500;
+	u32 us = 500;
 
 	while(1) {
 
-		for(i = 0;i < cnt;i++)
-			//motor_rotate_clkwise(dly);
-			//motor_rotate_counter_clkwise(dly);
-			motor_step8_rotate(dly);
+		for(i = 0;i < cnt;i++) {
+			motor_rotate(1,1);
+			udelay(us);
+		}
 		motor_brake();
 		break;
-#if 0
-		for(i = 0;i < cnt;i++)
-			motor_rotate_counter_clkwise(dly);
-		motor_brake();
-#endif
 	}
 }
