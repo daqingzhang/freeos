@@ -32,6 +32,14 @@ int infrared_get_value(void)
 	return t;
 }
 
+int infrared_is_blocked(void)
+{
+	u16 t = 0;
+
+	t = infrared_get_value();
+	return (t ? 0 : 1);
+}
+
 void infrared_test(void)
 {
 	int val = 0;
