@@ -5,9 +5,11 @@
 #include <key.h>
 #include <motor.h>
 #include <infrared.h>
+#include <speaker.h>
 
+#define CONFIG_SPEAKER_TEST
 //#define CONFIG_MOTOR_TEST
-#define CONFIG_INFRARED_TEST
+//#define CONFIG_INFRARED_TEST
 
 void board_init(void)
 {
@@ -55,6 +57,9 @@ void board_init(void)
 #ifdef CONFIG_INFRARED_TEST
 	infrared_init();
 #endif
+#ifdef CONFIG_SPEAKER_TEST
+	speaker_init();
+#endif
 	// enable gloabl interrupts
 	__enable_irq();
 	rprintf("%s done! \r\n",__func__);
@@ -96,6 +101,9 @@ int main(int argc, const char *argv[])
 #endif
 #ifdef CONFIG_INFRARED_TEST
 	infrared_test();
+#endif
+#ifdef CONFIG_SPEAKER_TEST
+	speaker_test();
 #endif
 	// led task construction
 	r = xLedTaskConstructor();
