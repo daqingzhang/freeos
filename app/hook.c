@@ -7,10 +7,7 @@
 #include <led_task.h>
 #include <key_task.h>
 
-//#define CONFIG_TASK_INFO
-
 #ifdef CONFIG_TASK_INFO
-
 #define TASK_STATUS_NUM 6
 
 #define INIT_TASK_STATE(_name,_cnt) 	\
@@ -81,7 +78,7 @@ void vTaskInfoInit(void)
 */
 }
 
-void vTaskInfoCollector(void)
+static void vTaskInfoCollector(void)
 {
 	int i,j,err = 0;
 	struct TaskInfoType *pt;
@@ -110,7 +107,7 @@ void vTaskInfoCollector(void)
 	}
 }
 
-void vTaskInfoPrinter(void)
+static void vTaskInfoPrinter(void)
 {
 	int i;
 	struct TaskInfoType *pt;
@@ -135,8 +132,6 @@ void vTaskInfoPrinter(void)
 	}
 	xTaskResumeAll();
 }
-#else
-void vTaskInfoInit(void){};
 #endif /* CONFIG_TASK_INFO */
 
 /*

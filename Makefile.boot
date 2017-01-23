@@ -79,6 +79,10 @@ TARGET_DEFS	:= -DHOST_DEBUG=1
 TARGET_DEFS	+= -DSTM32F10X_MD
 TARGET_DEFS	+= -DCONFIG_USE_FREERTOS
 TARGET_DEFS	+= -DGCC_ARMCM3
+#TARGET_DEFS	+= -DCONFIG_TASK_INFO
+#TARGET_DEFS	+= -DCONFIG_TEST_MOTOR
+#TARGET_DEFS	+= -DCONFIG_TEST_SPEAKER
+#TARGET_DEFS	+= -DCONFIG_TEST_INFRA
 #==============================================================================
 # OBJECTS & SOURCE FILES
 #==============================================================================
@@ -99,7 +103,7 @@ C_OBJS_DEV := \
 	./$(OS_DEVICE_SRC)/timer.o	\
 	./$(OS_DEVICE_SRC)/key.o	\
 	./$(OS_DEVICE_SRC)/motor.o	\
-	./$(OS_DEVICE_SRC)/infrared.o	\
+	./$(OS_DEVICE_SRC)/infra.o	\
 	./$(OS_DEVICE_SRC)/speaker.o	\
 	./$(OS_DEVICE_SRC)/led.o
 

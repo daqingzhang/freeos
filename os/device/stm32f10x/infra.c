@@ -1,5 +1,5 @@
 #include <common.h>
-#include <infrared.h>
+#include <infra.h>
 #include <stm32f10x_rcc.h>
 #include <stm32f10x_gpio.h>
 
@@ -7,7 +7,7 @@
 #define INFRARED_OUT	GPIO_Pin_0
 #define INFRARED_MASK	0x0001
 
-void infrared_init(void)
+void infra_init(void)
 {
 	unsigned int pin = 0;
 	GPIO_InitTypeDef Init;
@@ -24,7 +24,7 @@ void infrared_init(void)
 	rprintf("%s done!\r\n",__func__);
 }
 
-int infrared_get_value(void)
+int infra_get_value(void)
 {
 	u16 t;
 
@@ -32,20 +32,20 @@ int infrared_get_value(void)
 	return t;
 }
 
-int infrared_is_blocked(void)
+int infra_is_blocked(void)
 {
 	u16 t = 0;
 
-	t = infrared_get_value();
+	t = infra_get_value();
 	return (t ? 0 : 1);
 }
 
-void infrared_test(void)
+void infra_test(void)
 {
 	int val = 0;
 	while(1) {
 		mdelay(500);
-		val = infrared_get_value();
+		val = infra_get_value();
 		rprintf("%s, val = %d\r\n",__func__,val);
 	}
 }

@@ -34,7 +34,7 @@ void led_init(unsigned int led)
 	GPIO_WriteBit(GPIOC,pin,Bit_SET);
 }
 
-void led_light_on(unsigned int led)
+void led_on(unsigned int led)
 {
 	if(led & LED1)
 		GPIO_WriteBit(LED_GPIOX,LED1_PIN,Bit_RESET);
@@ -44,7 +44,7 @@ void led_light_on(unsigned int led)
 		GPIO_WriteBit(LED_GPIOX,LED3_PIN,Bit_RESET);
 }
 
-void led_light_off(unsigned int led)
+void led_off(unsigned int led)
 {
 	if(led & LED1)
 		GPIO_WriteBit(LED_GPIOX,LED1_PIN,Bit_SET);
@@ -54,11 +54,11 @@ void led_light_off(unsigned int led)
 		GPIO_WriteBit(LED_GPIOX,LED3_PIN,Bit_SET);
 }
 
-void led_light_flash(unsigned int led, unsigned int on,unsigned int off)
+void led_flash(unsigned int led, unsigned int on,unsigned int off)
 {
-	led_light_on(led);
+	led_on(led);
 	mdelay(on);
 
-	led_light_off(led);
+	led_off(led);
 	mdelay(off);
 }

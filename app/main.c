@@ -4,12 +4,8 @@
 #include <led.h>
 #include <key.h>
 #include <motor.h>
-#include <infrared.h>
+#include <infra.h>
 #include <speaker.h>
-
-#define CONFIG_SPEAKER_TEST
-//#define CONFIG_MOTOR_TEST
-//#define CONFIG_INFRARED_TEST
 
 void board_init(void)
 {
@@ -51,30 +47,32 @@ void board_init(void)
 
 	// config KEY
 	key_init(KEY2_ID | KEY3_ID | KEY4_ID);
-#ifdef CONFIG_MOTOR_TEST
+
+	//config motor
 	motor_init();
-#endif
-#ifdef CONFIG_INFRARED_TEST
-	infrared_init();
-#endif
-#ifdef CONFIG_SPEAKER_TEST
+
+	//config infra
+	infra_init();
+
+	//config speaker
 	speaker_init();
-#endif
+
 	// enable gloabl interrupts
 	__enable_irq();
+
 	rprintf("%s done! \r\n",__func__);
 }
 
 #ifndef CONFIG_USE_FREERTOS
-void serial_loopback(void);
-void leds_on(void);
+extern void serial_loopback(void);
+extern void leds_on(void);
 
 int main(int argc, const char *argv[])
 {
 	u32 cpuid = system_get_cpuid();
 
-	rprintf("cpuid: %x\r\n",cpuid);
-	rprintf("sysclk: %d, apb1clk: %d, apb2clk: %d\r\n",
+	rprintf("CPUID: %x\r\n",cpuid);
+	rprintf("SYSCLK: %d, APB1CLK: %d, APB2CLK: %d\r\n",
 		clktree.sysclk,clktree.apb1clk,clktree.apb2clk);
 
 	system_systick_run(1);
@@ -84,11 +82,11 @@ int main(int argc, const char *argv[])
 	leds_on();
 	return 0;
 }
-#else
+#else //defined (CONFIG_USE_FREERTOS)
 #include <led_task.h>
 #include <key_task.h>
 
-void vTaskInfoInit(void);
+extern void vTaskInfoInit(void);
 
 int main(int argc, const char *argv[])
 {
@@ -96,29 +94,33 @@ int main(int argc, const char *argv[])
 
 	rprintf("SYSCLK: %d, APB1CLK: %d, APB2CLk: %d\r\n",
 		clktree.sysclk,clktree.apb1clk,clktree.apb2clk);
-#ifdef CONFIG_MOTOR_TEST
+#ifdef CONFIG_TEST_MOTOR
 	motor_test();
 #endif
-#ifdef CONFIG_INFRARED_TEST
-	infrared_test();
+#ifdef CONFIG_TEST_INFRA
+	infra_test();
 #endif
-#ifdef CONFIG_SPEAKER_TEST
+#ifdef CONFIG_TEST_SPEAKER
 	speaker_test();
 #endif
-	// led task construction
+	// LED task construction
 	r = xLedTaskConstructor();
 	if(r) {
 		rprintf("%s, xLedTaskConstructor failed\n",__func__);
 		return -1;
 	}
+
+	// KEY task construction
 	r =xKeyTaskConstructor();
 	if(r) {
 		rprintf("%s, xKeyTaskConstructor failed\n",__func__);
 		return -1;
 	}
 
+	// init task information
+#ifdef CONFIG_TASK_INFO
 	vTaskInfoInit();
-
+#endif
 	// call scheduler
 	vTaskStartScheduler();
 

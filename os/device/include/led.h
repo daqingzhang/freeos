@@ -6,8 +6,8 @@
 #define LED3	(1<<2)
 
 void led_init(unsigned int led);
-void led_light_on(unsigned int led);
-void led_light_off(unsigned int led);
-void led_light_flash(unsigned int led, unsigned int on,unsigned int off);
+void led_on(unsigned int led);
+void led_off(unsigned int led);
+void led_flash(unsigned int led, unsigned int on,unsigned int off);
 
 #endif

@@ -83,9 +83,9 @@ void vLedDispTask(void *pvParameters)
 			if(led == LED_PL_DUMMY)
 				continue;
 			if(on)
-				led_light_on(led);
+				led_on(led);
 			else
-				led_light_off(led);
+				led_off(led);
 		}
 		xLedMsgPack(&DispMsg,LED_CMD_RSP,LED_ACK_DLY_OK,0,0,0);
 		r = xQueueSend(LedRspQueue,(void *)&DispMsg,portMAX_DELAY);
