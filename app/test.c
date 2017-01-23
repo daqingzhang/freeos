@@ -25,8 +25,8 @@ void serial_loopback(void)
 void leds_on(void)
 {
 	while(1) {
-		led_light_flash(LED1,500,500);
-		led_light_flash(LED2,500,500);
-		led_light_flash(LED3,500,500);
+		led_flash(LED1,500,500);
+		led_flash(LED2,500,500);
+		led_flash(LED3,500,500);
 	}
 }

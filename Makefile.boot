@@ -111,6 +111,7 @@ C_OBJS_APP := \
 	./$(APPDIR)/main.o \
 	./$(APPDIR)/test.o \
 	./$(APPDIR)/hook.o \
+	./$(APPDIR)/fsm.o \
 	./$(APPDIR)/led_fsm.o \
 	./$(APPDIR)/led_task.o \
 	./$(APPDIR)/key_task.o

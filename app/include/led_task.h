@@ -1,6 +1,7 @@
 #ifndef __LEDTASK_H__
 #define __LEDTASK_H__
 #include <common.h>
+#include <fsm.h>
 
 #define LED_MSG_HEAD_SIZE	1
 #define LED_MSG_CMD_SIZE	1
@@ -73,55 +74,22 @@ struct LedMsgFmt
 	u16 crc;
 };
 
-#define LED_FSM_R0 0
-#define LED_FSM_R1 1
-#define LED_FSM_R2 2
-#define LED_FSM_R3 3
-#define LED_FSM_R4 4
-#define LED_FSM_R5 5
-#define LED_FSM_R6 6
-#define LED_FSM_R7 7
-#define LED_FSM_R8 8
+#define DISP_TO_DISP	FSM_COMM_R0
+#define DISP_TO_DLY	FSM_COMM_R1
+#define DLY_TO_DLY	FSM_COMM_R2
+#define DLY_TO_RSP	FSM_COMM_R3
+#define RSP_TO_RSP	FSM_COMM_R4
+#define RSP_TO_DISP	FSM_COMM_R5
+#define RSP_TO_IDLE	FSM_COMM_R6
+#define IDLE_TO_IDLE	FSM_COMM_R7
+#define IDLE_TO_DISP	FSM_COMM_R8
 
-#define LED_FSM_S0 0
-#define LED_FSM_S1 1
-#define LED_FSM_S2 2
-#define LED_FSM_S3 3
+#define STATE_DISP	FSM_COMM_S0
+#define STATE_DLY	FSM_COMM_S1
+#define STATE_RSP	FSM_COMM_S2
+#define STATE_IDLE	FSM_COMM_S3
 
-enum LedFsmRouteType
-{
-	DISP_TO_DISP	= LED_FSM_R0,
-	DISP_TO_DLY	= LED_FSM_R1,
-	DLY_TO_DLY	= LED_FSM_R2,
-	DLY_TO_RSP	= LED_FSM_R3,
-	RSP_TO_RSP	= LED_FSM_R4,
-	RSP_TO_DISP	= LED_FSM_R5,
-	RSP_TO_IDLE	= LED_FSM_R6,
-	IDLE_TO_IDLE	= LED_FSM_R7,
-	IDLE_TO_DISP	= LED_FSM_R8,
-};
-
-enum LedFsmStateType
-{
-	STATE_DISP	= LED_FSM_S0,
-	STATE_DLY	= LED_FSM_S1,
-	STATE_RSP	= LED_FSM_S2,
-	STATE_IDLE	= LED_FSM_S3,
-};
-
-struct LedMsgStateType
-{
-	enum LedFsmStateType current;
-	enum LedFsmRouteType r;
-	enum LedFsmStateType next;
-};
-
-int xLedMsgStateUpdate(struct LedMsgStateType *state, enum LedFsmRouteType route);
-int xLedMsgStateSwitch(struct LedMsgStateType *state);
-int xLedMsgCurStateGet(struct LedMsgStateType *state);
-int xLedMsgNextStateGet(struct LedMsgStateType *state);
-int xLedMsgStateInit(struct LedMsgStateType *p);
-int xLedMsgStatePrint(struct LedMsgStateType *p);
+struct fsm_device *led_fsm_get_device(void);
 
 int xLedTaskConstructor(void);
 

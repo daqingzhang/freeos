@@ -229,8 +229,8 @@ void vLedCtrlTask(void *pvParameters)
 {
 	TickType_t TxWait = 10,RxWait = 5,IdleWait = 500,tick;
 	BaseType_t r;
-	int err,i,update;
-	struct LedMsgStateType state;
+	int err,i,fsm_err;
+	struct fsm_device *d = led_fsm_get_device();
 	struct LedMsgFmt MsgCtrl[3],MsgDly,MsgRsp;
 	QueueHandle_t *pq[] = {Led1DlyQueue,Led2DlyQueue,Led3DlyQueue};
 
@@ -241,11 +241,11 @@ void vLedCtrlTask(void *pvParameters)
 	r = 0;
 	i = 0;
 	err = 0;
-	update = 0;
-	xLedMsgStateInit(&state);
+	fsm_err = 0;
+	fsm_init(d);
 
 	for(;;) {
-		switch(xLedMsgCurStateGet(&state)) {
+		switch(fsm_get_current_state(d)) {
 		case STATE_DISP:
 			vMsgPrint("STATE_DISP\r\n",'s');
 			r = xQueueSend(LedDispQueue,(void *)&MsgCtrl[i],TxWait);
@@ -257,7 +257,7 @@ void vLedCtrlTask(void *pvParameters)
 			if(r == pdPASS) {
 				// TODO: check ack
 				vLedMsgPrint(&MsgRsp);
-				update = xLedMsgStateUpdate(&state,DISP_TO_DLY);
+				fsm_err = fsm_search(d,DISP_TO_DLY);
 			}
 			break;
 		case STATE_DLY:
@@ -272,7 +272,7 @@ void vLedCtrlTask(void *pvParameters)
 			if(r == pdPASS) {
 				// TODO: check ack
 				vLedMsgPrint(&MsgRsp);
-				update = xLedMsgStateUpdate(&state,DLY_TO_RSP);
+				fsm_err = fsm_search(d,DLY_TO_RSP);
 			}
 			break;
 		case STATE_RSP:
@@ -285,29 +285,29 @@ void vLedCtrlTask(void *pvParameters)
 				i++;
 				i = i % 3;
 				if(i)
-					update = xLedMsgStateUpdate(&state,RSP_TO_DISP);
+					fsm_err = fsm_search(d,RSP_TO_DISP);
 				else
-					update = xLedMsgStateUpdate(&state,RSP_TO_IDLE);
+					fsm_err = fsm_search(d,RSP_TO_IDLE);
 			}
 			break;
 		case STATE_IDLE:
 			vMsgPrint("STATE_IDLE\r\n",'s');
 			tick = xTaskGetTickCount();
 			vTaskDelayUntil(&tick,IdleWait);
-			update = xLedMsgStateUpdate(&state,IDLE_TO_DISP);
+			fsm_err = fsm_search(d,IDLE_TO_DISP);
 			break;
 		default:
 			vMsgPrint("STATE_UNKNOW\r\n",'s');
-			update = -1;
+			fsm_err = -1;
 			break;
 		}
-		if(update)
+		if(fsm_err)
 			break;
-		r = xLedMsgStateSwitch(&state);
+		r = fsm_update(d);
 	}
 	vTaskSuspendAll();
 	rprintf("%s, error %d\r\n",__func__,err);
-	xLedMsgStatePrint(&state);
+	fsm_print(d);
 	xTaskResumeAll();
 	for(;;);
 }
