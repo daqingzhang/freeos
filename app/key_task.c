@@ -1,5 +1,6 @@
 #include <common.h>
 #include <key.h>
+#include <speaker.h>
 #include <key_task.h>
 
 TaskHandle_t KeyGetHandle = NULL;
@@ -59,7 +60,7 @@ static void vKeyPrcFunction(u32 key)
 	vTaskSuspendAll();
 	rprintf("%s, process key %x\r\n",__func__,key);
 	xTaskResumeAll();
-
+	speaker_beep(100,100);
 	r = xSemaphoreGive(KeyPresSema);
 	if(r != pdTRUE) {
 		vMsgPrint("vKeyPrcFunction, give a sema failed\r\n",'s');

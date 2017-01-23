@@ -16,7 +16,7 @@ int fsm_register(struct fsm_device *dev,
 	if(dev->inited)
 		return -FSM_ERROR_INITED;
 
-	dev->inited = 1;
+	dev->inited = TRUE;
 	dev->name = name;
 	dev->ops  = ops;
 	dev->priv = priv;
@@ -26,7 +26,7 @@ int fsm_register(struct fsm_device *dev,
 
 int fsm_unregister(struct fsm_device *dev)
 {
-	dev->inited = 0;
+	dev->inited = FALSE;
 	return 0;
 }
 

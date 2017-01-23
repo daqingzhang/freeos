@@ -1,6 +1,14 @@
 #ifndef __FSM_H__
 #define __FSM_H__
 
+#ifndef TRUE
+#define TRUE 1
+#endif
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+
 enum fsm_comm_route
 {
 	FSM_COMM_R0 = 0,
