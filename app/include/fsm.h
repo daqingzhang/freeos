@@ -24,6 +24,9 @@ enum fsm_comm_route
 	FSM_COMM_R10,
 	FSM_COMM_R11,
 	FSM_COMM_R12,
+	FSM_COMM_R13,
+	FSM_COMM_R14,
+	FSM_COMM_R15,
 };
 
 enum fsm_comm_state
@@ -41,6 +44,9 @@ enum fsm_comm_state
 	FSM_COMM_S10,
 	FSM_COMM_S11,
 	FSM_COMM_S12,
+	FSM_COMM_S13,
+	FSM_COMM_S14,
+	FSM_COMM_S15,
 };
 
 struct fsm_state
