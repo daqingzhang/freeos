@@ -95,6 +95,7 @@ C_OBJS_LIB := \
 	./$(LIB_BOARD_SRC)/stm32f10x_system.o	\
 	./$(LIB_BOARD_SRC)/stm32f10x_rcc.o	\
 	./$(LIB_BOARD_SRC)/stm32f10x_gpio.o	\
+	./$(LIB_BOARD_SRC)/stm32f10x_spi.o	\
 	./$(LIB_BOARD_SRC)/stm32f10x_usart.o
 
 C_OBJS_DEV := \
@@ -105,6 +106,8 @@ C_OBJS_DEV := \
 	./$(OS_DEVICE_SRC)/motor.o	\
 	./$(OS_DEVICE_SRC)/infra.o	\
 	./$(OS_DEVICE_SRC)/speaker.o	\
+	./$(OS_DEVICE_SRC)/lcd_ascii.o	\
+	./$(OS_DEVICE_SRC)/lcd.o	\
 	./$(OS_DEVICE_SRC)/led.o
 
 C_OBJS_APP := \

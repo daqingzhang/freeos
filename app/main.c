@@ -6,6 +6,7 @@
 #include <motor.h>
 #include <infra.h>
 #include <speaker.h>
+#include <lcd.h>
 
 void board_init(void)
 {
@@ -103,6 +104,7 @@ int main(int argc, const char *argv[])
 #ifdef CONFIG_TEST_SPEAKER
 	speaker_test();
 #endif
+	lcd_test();
 	// LED task construction
 	r = xLedTaskConstructor();
 	if(r) {
