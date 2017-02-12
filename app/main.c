@@ -42,7 +42,7 @@ void board_init(void)
 	timer_init(TIMER2_ID);
 	timer_init(TIMER3_ID);
 	timer_init(TIMER4_ID);
-
+#if 0
 	// config LED
 	led_init(LED1|LED2|LED3);
 
@@ -57,7 +57,7 @@ void board_init(void)
 
 	//config speaker
 	speaker_init();
-
+#endif
 	// enable gloabl interrupts
 	__enable_irq();
 

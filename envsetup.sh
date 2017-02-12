@@ -1,9 +1,9 @@
 FREEOS_CUR_DIR=$(pwd)
-#PATH_ARMGCC_BIN=$FREEOS_CUR_DIR/tools/gcc-arm-none-eabi/bin
+PATH_ARMGCC_BIN=$FREEOS_CUR_DIR/tools/gcc-arm-none-eabi/bin
 #PATH_ARMGCC_LIB=~/
 
 #export LD_LIBRARY_PATH=$PATH_ARMGCC_LIB
-#export PATH=$PATH:$PATH_ARMGCC_BIN
+export PATH=$PATH:$PATH_ARMGCC_BIN
 export FREEOS_TOP_DIR=$FREEOS_CUR_DIR
 export FREEOS_BOARD_DIR=$FREEOS_TOP_DIR/lib/board/stm32f10x
 export FREEOS_CORE_DIR=$FREEOS_TOP_DIR/lib/core/arm
