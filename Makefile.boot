@@ -106,7 +106,7 @@ C_OBJS_DEV := \
 	./$(OS_DEVICE_SRC)/motor.o	\
 	./$(OS_DEVICE_SRC)/infra.o	\
 	./$(OS_DEVICE_SRC)/speaker.o	\
-	./$(OS_DEVICE_SRC)/lcd_ascii.o	\
+	./$(OS_DEVICE_SRC)/lcd_displib.o	\
 	./$(OS_DEVICE_SRC)/lcd.o	\
 	./$(OS_DEVICE_SRC)/led.o
 

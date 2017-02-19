@@ -1,9 +1,11 @@
 #include <common.h>
+#include <string.h>
 #include <stm32f10x_rcc.h>
 #include <stm32f10x_gpio.h>
 #include <stm32f10x_spi.h>
 #include <lcd.h>
 
+#define LCD_SPI	SPI1
 /* PB0: RST */
 #define LCD_GPIO1	GPIOB
 #define LCD_PIN_RST	GPIO_Pin_0
@@ -19,9 +21,27 @@
 /* PA7: MOSI */
 #define LCD_PIN_MOSI	GPIO_Pin_7
 
-#define LCD_SPI	SPI1
+#define LCD_CMD_END	0xEE
+#define LCD_CMD_RESET	0xE2
+#define LCD_CMD_APON	0xA5
+#define LCD_CMD_APOFF	0xA4
+#define LCD_CMD_BIAS	0xA2
 
-void lcd_pin_init(void)
+#define LCD_CMD_PAGE	0xB0
+#define LCD_CMD_SLINE	0x40
+#define LCD_CMD_COL_ADDRH	0x10
+#define LCD_CMD_COL_ADDRL	0x00
+#define LCD_CMD_NOP		0xE3
+
+enum LCD_CMD_TYPE
+{
+	LCD_DAT = 0,
+	LCD_CMD,
+};
+
+static uint8_t lcd_pages[] = {0,1,2,3,4,5,6,7};
+
+static void lcd_pin_init(void)
 {
 	GPIO_InitTypeDef Init;
 
@@ -29,13 +49,13 @@ void lcd_pin_init(void)
 	// enable peripherial clock
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA,ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB,ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC,ENABLE);
 
 	// RST
 	Init.GPIO_Pin	= LCD_PIN_RST;
 	Init.GPIO_Mode	= GPIO_Mode_Out_PP;
 	Init.GPIO_Speed	= GPIO_Speed_50MHz;
 	GPIO_Init(LCD_GPIO1,&Init);
-	//GPIO_WriteBit(LCD_GPIO1,LCD_PIN_RST,Bit_SET);//rst = 1
 	// A0
 	Init.GPIO_Pin	= LCD_PIN_A0;
 	Init.GPIO_Mode	= GPIO_Mode_Out_PP;
@@ -58,34 +78,7 @@ void lcd_pin_init(void)
 	GPIO_Init(LCD_GPIO2,&Init);
 }
 
-#if 0
-void lcd_spi_init(void)
-{
-	SPI_InitTypeDef Init;
-
-	//enable SPI1 clock
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1,ENABLE);
-	SPI_I2S_DeInit(LCD_SPI);
-	
-	Init.SPI_Direction		= SPI_Direction_2Lines_FullDuplex;
-	Init.SPI_Mode			= SPI_Mode_Master;
-	Init.SPI_DataSize		= SPI_DataSize_8b;
-	Init.SPI_CPOL			= SPI_CPOL_Low;
-	Init.SPI_CPHA			= SPI_CPHA_1Edge;
-	Init.SPI_NSS			= SPI_NSS_Hard;
-	Init.SPI_BaudRatePrescaler	= SPI_BaudRatePrescaler_32;
-	Init.SPI_CRCPolynomial		= 7;
-	SPI_Init(LCD_SPI,&Init);
-
-	SPI_I2S_ITConfig(LCD_SPI,SPI_I2S_IT_RXNE,DISABLE);
-	SPI_I2S_ITConfig(LCD_SPI,SPI_I2S_IT_TXE,DISABLE);
-
-	LCD_SPI->CR2 = 0x0004;//ss output disable
-
-	SPI_Cmd(LCD_SPI,ENABLE);
-}
-#else
-void lcd_spi_init(void)
+static void lcd_spi_init(void)
 {
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1,ENABLE);
 	SPI_I2S_DeInit(LCD_SPI);
@@ -114,8 +107,7 @@ void lcd_spi_init(void)
 	LCD_SPI->CR1 |= 0x0040;
 }
 
-#endif
-void lcd_set_cs(int level)
+static void lcd_set_cs(int level)
 {
 	if(level)
 		GPIO_WriteBit(LCD_GPIO2,LCD_PIN_CS,Bit_SET);//cs = 1
@@ -123,16 +115,15 @@ void lcd_set_cs(int level)
 		GPIO_WriteBit(LCD_GPIO2,LCD_PIN_CS,Bit_RESET);//cs = 0
 }
 
-/* if cmd = 1, set A0 = low level */
-void lcd_set_a0(int level)
+static void lcd_set_a0(int level)
 {
 	if(level)
-		GPIO_WriteBit(LCD_GPIO2,LCD_PIN_A0,Bit_SET);//A0 = 1
+		GPIO_WriteBit(LCD_GPIO1,LCD_PIN_A0,Bit_SET);//A0 = 1
 	else
-		GPIO_WriteBit(LCD_GPIO2,LCD_PIN_A0,Bit_RESET);//A0 = 0
+		GPIO_WriteBit(LCD_GPIO1,LCD_PIN_A0,Bit_RESET);//A0 = 0
 }
 
-void lcd_set_rst(int level)
+static void lcd_set_rst(int level)
 {
 	if(level)
 		GPIO_WriteBit(LCD_GPIO1,LCD_PIN_RST,Bit_SET);
@@ -140,25 +131,18 @@ void lcd_set_rst(int level)
 		GPIO_WriteBit(LCD_GPIO1,LCD_PIN_RST,Bit_RESET);
 }
 
-enum LCD_CMD_TYPE
-{
-	LCD_DAT = 0,
-	LCD_CMD,
-};
-
 static void lcd_spi_write(uint8_t dat, enum LCD_CMD_TYPE cmd)
 {
 	uint8_t dummy;
+
+	//wait until txfifo is emtpy
+	while((LCD_SPI->SR & SPI_I2S_FLAG_TXE) == 0);
 
 	// set A0 line
 	if(cmd == LCD_CMD)
 		lcd_set_a0(0);
 	else
 		lcd_set_a0(1);
-
-	//wait until txfifo is emtpy
-	while((LCD_SPI->SR & SPI_I2S_FLAG_TXE) == 0);
-
 	//set cs = 0
 	lcd_set_cs(0);
 
@@ -181,64 +165,153 @@ static void lcd_spi_write(uint8_t dat, enum LCD_CMD_TYPE cmd)
 #endif
 }
 
-#define LCD_CMD_END	0xEE
-#define LCD_CMD_RESET	0xE2
-#define LCD_CMD_APON	0xA5
-#define LCD_CMD_APOFF	0xA4
-#define LCD_CMD_BIAS	0xA2
+static void lcd_set_page_addr(int page)
+{
+	lcd_spi_write(LCD_CMD_PAGE | page,  LCD_CMD);
+}
 
-#define LCD_CMD_PAGE	0xB0
-#define LCD_CMD_SLINE	0x40
-#define LCD_CMD_COL_ADDRH	0x10
-#define LCD_CMD_COL_ADDRL	0x01
-#define LCD_CMD_NOP		0xE3
+static void lcd_set_col_addr(int column)
+{
+	int h = column / 0x0F;
+	int l = column % 0x0F;
 
-uint8_t lcd_pages[] = {0,1,2,3,4,5,6,7};
+	lcd_spi_write(LCD_CMD_COL_ADDRH | h, LCD_CMD);
+	lcd_spi_write(LCD_CMD_COL_ADDRL | l, LCD_CMD);
+}
 
-void lcd_screen_clear(uint8_t fill)
+static void lcd_set_row_data(uint8_t data)
+{
+	lcd_spi_write(data, LCD_DAT);
+}
+
+static int lcd_get_disp_data(unsigned char c)
+{
+	int idx = -1;
+
+	if((c >= '0') && (c <='9')) {
+		idx = c - 0x30;
+	} else if((c >= 'A') && (c <= 'Z')) {
+		idx = c - 0x37;
+	} else if((c >= 'a') && (c <= 'z')) {
+		idx = c - 0x57;
+	} else {
+		switch(c) {
+		case ' ':
+			idx = 36;
+			break;
+		case '+':
+			idx = 37;
+			break;
+		case '-':
+			idx = 38;
+			break;
+		case '!':
+			idx = 39;
+			break;
+		case '.':
+			idx = 40;
+			break;
+		case '*':
+			idx = 41;
+			break;
+		case '/':
+			idx = 42;
+			break;
+		case ':':
+			idx = 43;
+			break;
+		case '%':
+			idx = 44;
+			break;
+		case '=':
+			idx = 45;
+			break;
+		case '?':
+		case ';':
+		case '@':
+		case '#':
+		case '$':
+		case '^':
+		case '&':
+		case '(':
+		case ')':
+		default:
+			idx = -1;
+			break;
+		}
+	}
+	return idx;
+}
+
+static int page_invalid(int page)
+{
+	if((page < 0) || (page > LCD_PAGE_NR - 1))
+		return -1;
+	return 0;
+}
+
+static int column_invalid(int column)
+{
+	//if((column < 0) || (column > LCD_COL_END))
+	if((column < 0) || (column > LCD_COL_END - LCD_DATA_HEIGHT))
+		return -1;
+	return 0;
+}
+
+void lcd_clear_screen(unsigned char fill)
 {
 	int i,j;
 
 	for(i = 0; i < LCD_PAGE_NR;i++) {
-		lcd_spi_write(LCD_CMD_PAGE | i,  LCD_CMD);
-		lcd_spi_write(LCD_CMD_COL_ADDRH, LCD_CMD);
-		lcd_spi_write(LCD_CMD_COL_ADDRL, LCD_CMD);
-
-		for(j = 0;j < LCD_COL_DOT_NR;j++) {
-			lcd_spi_write(fill, LCD_DAT);
-		}
+		lcd_set_page_addr(lcd_pages[i]);
+		lcd_set_col_addr(0);
+		for(j = 0;j < LCD_X_DOT;j++)
+			lcd_set_row_data(fill);
 	}
 }
 
-void lcd_screen_init(void)
+void lcd_clear_page(int page,unsigned char fill)
+{
+	int j;
+
+	lcd_set_page_addr(page);
+	lcd_set_col_addr(0);
+		for(j = 0;j < LCD_X_DOT;j++)
+			lcd_set_row_data(fill);
+}
+
+void lcd_reset(void)
 {
 	mdelay(10);
-
 	lcd_set_rst(0);
 	mdelay(200);
-
 	lcd_set_rst(1);
 	mdelay(50);
+}
+
+void lcd_set_panel(void)
+{
+	lcd_reset();
 
 	lcd_spi_write(0xAE, LCD_CMD); //display OFF
 	lcd_spi_write(0xA2, LCD_CMD); //bias, 1/9
 	lcd_spi_write(0xA0, LCD_CMD); //ADC select
-	lcd_spi_write(0xC0, LCD_CMD); //com1->com64
+	//lcd_spi_write(0xC0, LCD_CMD); //com1->com64
+	lcd_spi_write(0xC8, LCD_CMD); //com1->com64
 	lcd_spi_write(0x24, LCD_CMD); //Rb/Ra
-
 	lcd_spi_write(0x81, LCD_CMD); //contrast
 	lcd_spi_write(50,   LCD_CMD);
-
 	lcd_spi_write(0x2F, LCD_CMD); //Voltage
 	lcd_spi_write(0xA6, LCD_CMD); //Normal display
+	//lcd_spi_write(0xA5, LCD_CMD); //All pixel ON
 	lcd_spi_write(0xA4, LCD_CMD); //All pixel off
 	lcd_spi_write(0x40, LCD_CMD); //Display start line = 0
 	lcd_spi_write(0xB0, LCD_CMD); //Page address = 0
 	lcd_spi_write(0x10, LCD_CMD); //Column address high
 	lcd_spi_write(0x01, LCD_CMD); //column address low
-	lcd_screen_clear(0x0);
 	lcd_spi_write(0xAF, LCD_CMD); //Display ON
-	//lcd_spi_write(0xA5, LCD_CMD); //All pixel ON
+
+	lcd_clear_screen(0x0);
 }
 
 void lcd_init(void)
@@ -247,50 +320,81 @@ void lcd_init(void)
 	lcd_spi_init();
 	lcd_set_cs(1);
 	lcd_set_a0(0);
-	lcd_screen_init();
+	lcd_set_panel();
 }
 
-extern unsigned char lcd_asclib8x16[8][16];
-extern unsigned char lcd_disp[16];
+extern unsigned char lcd_displib[][LCD_DATA_WIDTH];
 
-void lcd_screen_putc(int page, int col, uint8_t ch)
+int lcd_putc(int page, int col, const char ch)
 {
-	int i = 0;
-//	int j = 7;
-	int idx = 0;
+	int i,idx,p;
 
-	//first page
-	lcd_spi_write(0xB0 | lcd_pages[page & 0x7], LCD_CMD);
-	lcd_spi_write(((col + 1) >> 4) | 0x10, LCD_CMD); //set col high
-	lcd_spi_write(((col + 1) >> 0) & 0x0F, LCD_CMD); //set col low
+	p = lcd_pages[page];
+	if(page_invalid(p))
+		return -LCD_ERR_INVALID_PAGE;
+	lcd_set_page_addr(p);
 
-	for(i = 0;i < 8;i++)
-		lcd_spi_write(lcd_disp[idx++],LCD_DAT);
+	if(column_invalid(col))
+		return -LCD_ERR_INVALID_COL;
+	lcd_set_col_addr(col);
 
-	//next page
-	lcd_spi_write(0xB0 | lcd_pages[(page + 1) & 0x7], LCD_CMD);
-	lcd_spi_write(((col + 1) >> 4) | 0x10, LCD_CMD); //set col high
-	lcd_spi_write(((col + 1) >> 0) & 0x0F, LCD_CMD); //set col low
+	idx = lcd_get_disp_data(ch);
+	if(idx < 0)
+		return -LCD_ERR_INVALID_DATA;
 
-	for(i = 0;i < 8;i++)
-		lcd_spi_write(lcd_disp[idx++],LCD_DAT);
-
+	for(i = 0;i < LCD_DATA_WIDTH;i++)
+		lcd_set_row_data(lcd_displib[idx][i]);
+	return 0;
 }
 
-void lcd_screen_puts(int row, int col, const char *s)
+int lcd_puts(int page, int col, const char *s)
 {
+	int len,retval;
 
+	if((!s) || (!(len = (int)strlen(s))))
+		return -LCD_ERR_INVALID_DATA;
+
+	while(len--) {
+		if(column_invalid(col)) {
+			if(page_invalid(page))
+				break;
+			col = LCD_COL_START;
+			page++;
+		}
+		retval = lcd_putc(page, col, *(s++));
+		if(retval < 0)
+			return retval;
+
+		col = LCD_INC_COL(col);
+	}
+	return 0;
 }
 
 void lcd_test(void)
 {
+	int page,col;
+
 	rprintf("%s, start\r\n",__func__);
 	lcd_init();
+#if 0
+	while(1) {
+		for(page = 0;page < 8;page++)
+			for(col = 0;col < (128 - 8);col += 8) {
+				lcd_clear_screen(0);
+				mdelay(10);
+				lcd_putc(lcd_pages[page],col,'A');
+				mdelay(500);
+			}
+	}
+#endif
+#if 1
+	//lcd_putc(0,0,'0');
+	//lcd_putc(0,0,'0');
+	lcd_puts(0,0,"1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/:.!%=");
+	//lcd_clear_page(1,0xFF);
+	lcd_puts(4,0,"helloworld");
+	lcd_puts(5,0,"helle c program");
+#endif
 
-//	lcd_screen_putc(0,10,'A');
-//	lcd_screen_putc(1,10,'A');
-//	lcd_screen_putc(3,10,'A');
-	lcd_screen_putc(4,10,'A');
-	while(1) {};
+	for(;;);
 }
-
