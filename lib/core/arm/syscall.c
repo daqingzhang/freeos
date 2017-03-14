@@ -59,6 +59,6 @@ void SysTick_Handler(void)
 	unsigned int reg = SysTick->CTRL;
 
 	system_systick_clr_pending();
-	rprintf("%x, %d\r\n", reg,tick++);
+	rprintf("%x, %d\n", reg,tick++);
 }
 #endif

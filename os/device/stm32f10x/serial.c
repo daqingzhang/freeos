@@ -190,12 +190,20 @@ char serial_getc(int id)
 	return ch;
 }
 
-void serial_putc(int id,char ch)
+static void serial_putc_hw(int id,char ch)
 {
 	if(id == USART1_ID)
 		__usart1_putc(ch);
 	else if(id == USART2_ID)
 		__usart2_putc(ch);
+}
+
+void serial_putc(int id,char ch)
+{
+	if(ch == '\n') {
+		serial_putc_hw(id,'\r');
+	}
+	serial_putc_hw(id,ch);
 }
 
 int serial_tstc(int id)
@@ -215,8 +223,6 @@ int serial_tstc(int id)
 void serial_puts(int id,const char *pstr)
 {
 	while(*pstr != '\0') {
-		if(*pstr == '\n')
-			serial_putc(id,'\r');
 		serial_putc(id,*pstr++);
 	}
 }

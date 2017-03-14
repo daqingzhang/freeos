@@ -89,3 +89,15 @@ __enable_irq:
 	msr	primask,r0
 	isb
 	mov	pc,lr
+
+.global __get_CONTROL
+__get_CONTROL:
+	mrs	r0,control
+	isb
+	mov	pc,lr
+
+.global	__set_CONTROL
+__set_CONTROL:
+	msr	control,r0
+	isb
+	mov	pc,lr
