@@ -18,7 +18,7 @@ void board_init(void)
 	// init system clock
 	r = system_init_clock();
 	if(r)
-		rprintf("system_init_clock failed %d\r\n",r);
+		rprintf("system_init_clock failed %d\n",r);
 
 	// set priority group
 	system_set_priority_group(NVIC_PRIORITY_GRP4);
@@ -29,7 +29,7 @@ void board_init(void)
 	// config system tick
 	r = system_systick_config(CONFIG_SYSTICK_MS(100));
 	if(r)
-		rprintf("system_systick_config failed %d\r\n",r);
+		rprintf("system_systick_config failed %d\n",r);
 
 	// config pinmux & GPIO
 
@@ -42,7 +42,7 @@ void board_init(void)
 	timer_init(TIMER2_ID);
 	timer_init(TIMER3_ID);
 	timer_init(TIMER4_ID);
-#if 0
+#if 1
 	// config LED
 	led_init(LED1|LED2|LED3);
 
@@ -61,7 +61,7 @@ void board_init(void)
 	// enable gloabl interrupts
 	__enable_irq();
 
-	rprintf("%s done! \r\n",__func__);
+	rprintf("%s done! \n",__func__);
 }
 
 #ifndef CONFIG_USE_FREERTOS
@@ -72,8 +72,8 @@ int main(int argc, const char *argv[])
 {
 	u32 cpuid = system_get_cpuid();
 
-	rprintf("CPUID: %x\r\n",cpuid);
-	rprintf("SYSCLK: %d, APB1CLK: %d, APB2CLK: %d\r\n",
+	rprintf("CPUID: %x\n",cpuid);
+	rprintf("SYSCLK: %d, APB1CLK: %d, APB2CLK: %d\n",
 		clktree.sysclk,clktree.apb1clk,clktree.apb2clk);
 
 	system_systick_run(1);
@@ -93,7 +93,7 @@ int main(int argc, const char *argv[])
 {
 	int r;
 
-	rprintf("SYSCLK: %d, APB1CLK: %d, APB2CLk: %d\r\n",
+	rprintf("SYSCLK: %d, APB1CLK: %d, APB2CLk: %d\n",
 		clktree.sysclk,clktree.apb1clk,clktree.apb2clk);
 #ifdef CONFIG_TEST_MOTOR
 	motor_test();
@@ -104,7 +104,7 @@ int main(int argc, const char *argv[])
 #ifdef CONFIG_TEST_SPEAKER
 	speaker_test();
 #endif
-	lcd_test();
+	//lcd_test();
 	// LED task construction
 	r = xLedTaskConstructor();
 	if(r) {

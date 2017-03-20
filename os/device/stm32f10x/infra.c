@@ -21,7 +21,7 @@ void infra_init(void)
 	Init.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(INFRARED_GPIO,&Init);
 
-	rprintf("%s done!\r\n",__func__);
+	rprintf("%s done!\n",__func__);
 }
 
 int infra_get_value(void)
@@ -46,6 +46,6 @@ void infra_test(void)
 	while(1) {
 		mdelay(500);
 		val = infra_get_value();
-		rprintf("%s, val = %d\r\n",__func__,val);
+		rprintf("%s, val = %d\n",__func__,val);
 	}
 }

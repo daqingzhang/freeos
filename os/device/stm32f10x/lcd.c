@@ -372,7 +372,7 @@ int lcd_puts(int page, int col, const char *s)
 
 void lcd_test(void)
 {
-	int page,col;
+	//int page,col;
 
 	rprintf("%s, start\r\n",__func__);
 	lcd_init();

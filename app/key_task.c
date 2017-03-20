@@ -18,9 +18,9 @@ void vKeyWatcherTask(void *pvParameters)
 
 		vTaskSuspendAll();
 		if(r == pdTRUE) {
-			rprintf("%s, key sema taken\r\n",__func__);
+			rprintf("%s, key sema taken\n",__func__);
 		} else {
-			rprintf("%s, key sema taken failed\r\n",__func__);
+			rprintf("%s, key sema taken failed\n",__func__);
 		}
 		xTaskResumeAll();
 	}
@@ -46,7 +46,7 @@ void vKeyGetTask(void *pvParameters)
 		cnt = 0;
 
 		vTaskSuspendAll();
-		rprintf("%s, %x\r\n",__func__,k);
+		rprintf("%s, %x\n",__func__,k);
 		xTaskResumeAll();
 
 		xQueueSend(KeyPrcQueue,(void *)&k,wait);
@@ -58,12 +58,12 @@ static void vKeyPrcFunction(u32 key)
 	BaseType_t r;
 
 	vTaskSuspendAll();
-	rprintf("%s, process key %x\r\n",__func__,key);
+	rprintf("%s, process key %x\n",__func__,key);
 	xTaskResumeAll();
 	speaker_beep(100,100);
 	r = xSemaphoreGive(KeyPresSema);
 	if(r != pdTRUE) {
-		vMsgPrint("vKeyPrcFunction, give a sema failed\r\n",'s');
+		vMsgPrint("vKeyPrcFunction, give a sema failed\n",'s');
 	}
 }
 
@@ -100,34 +100,34 @@ int xKeyTaskConstructor(void)
 	BaseType_t r;
 	int depth = 10,width = 4,stk = 256;
 
-	rprintf("%s, depth = %d, width = %d, stk = %d\r\n",__func__,depth,width,stk);
+	rprintf("%s, depth = %d, width = %d, stk = %d\n",__func__,depth,width,stk);
 	// create queue
 	// queue width is the number of bytes, key value is a 32 bits number,
 	// so the width is 4.
 	KeyPrcQueue = xQueueCreate(depth,width);
 	if(KeyPrcQueue == 0) {
-		rprintf("%s, create KeyPrcQueue failed\r\n",__func__);
+		rprintf("%s, create KeyPrcQueue failed\n",__func__);
 		return -1;
 	}
 	KeyPresSema = xSemaphoreCreateBinary();
 	if(KeyPresSema == NULL) {
-		rprintf("%s, create KeyPresSema failed\r\n",__func__);
+		rprintf("%s, create KeyPresSema failed\n",__func__);
 		return -1;
 	}
 	// create task
 	r = xTaskCreate(vKeyGetTask,"vKeyGetTask",stk,NULL,2,&KeyGetHandle);
 	if(r != pdPASS) {
-		rprintf("%s, create vKeyGetTask failed\r\n",__func__);
+		rprintf("%s, create vKeyGetTask failed\n",__func__);
 		return -1;
 	}
 	r = xTaskCreate(vKeyPrcTask,"vKeyPrcTask",stk,NULL,2,&KeyPrcHandle);
 	if(r != pdPASS) {
-		rprintf("%s, create vKeyPrcTask failed\r\n",__func__);
+		rprintf("%s, create vKeyPrcTask failed\n",__func__);
 		return -1;
 	}
 	r = xTaskCreate(vKeyWatcherTask,"vKeyWatcher",stk,NULL,2,&KeyWthHandle);
 	if(r != pdPASS) {
-		rprintf("%s, create vKeyWatcherTask failed\r\n",__func__);
+		rprintf("%s, create vKeyWatcherTask failed\n",__func__);
 		return -1;
 	}
 	return 0;

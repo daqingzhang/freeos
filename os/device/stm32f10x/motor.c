@@ -26,7 +26,7 @@ void motor_init(void)
 	GPIO_Init(MTR_GPIOA,&Init);
 
 	GPIO_WriteBit(MTR_GPIOA,pin,Bit_RESET);
-	rprintf("%s done!\r\n",__func__);
+	rprintf("%s done!\n",__func__);
 }
 
 void motor_brake(void)

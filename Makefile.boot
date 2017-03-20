@@ -63,7 +63,7 @@ OBJCOPY := $(TC)-objcopy
 OBJDUMP := $(TC)-objdump
 
 CC_OPTS		:= -g -mthumb -mcpu=cortex-m3 -march=armv7-m
-CC_OPTS		+= -O2 -Wall -static -fno-common -fno-builtin-printf
+CC_OPTS		+= -O2 -Wall -Werror -static -fno-common -fno-builtin-printf
 
 LD_OPTS		:= -T boot_stm.ld $(INCS)
 LD_OPTS		+= -Wl,-nostdlib,--relax,-Map=$(TARGET_MAP),--gc-sections

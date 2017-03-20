@@ -91,7 +91,7 @@ static void vTaskInfoCollector(void)
 		j = eTaskGetState(pt->handle);
 		if(j >= TASK_STATUS_NUM) {
 			vTaskSuspendAll();
-			rprintf("vTaskInfoCollector, error %d !\r\n",j);
+			rprintf("vTaskInfoCollector, error %d !\n",j);
 			xTaskResumeAll();
 			err = 1;
 			break;
@@ -118,17 +118,17 @@ static void vTaskInfoPrinter(void)
 	uAppTaskTickNum = 0;
 
 	vTaskSuspendAll();
-	rprintf("\r\n");
+	rprintf("\n");
 	for(i = 0;i < ARRAY_SIZE(AppTasks);i++) {
 		pt = AppTasks + i;
 		ps = pt->state;
 		rprintf("%s\t, %s = %d\t, %s = %d\t,%s = %d\t,"
-			"%s = %d\t, %s = %d\t, %s = %d\r\n",
+			"%s = %d\t, %s = %d\t, %s = %d\n",
 			pt->name,
 			ps[0].name,ps[0].cnt,ps[1].name,ps[1].cnt,
 			ps[2].name,ps[2].cnt,ps[3].name,ps[3].cnt,
 			ps[4].name,ps[4].cnt,ps[5].name,ps[5].cnt);
-		rprintf("\r\n");
+		rprintf("\n");
 	}
 	xTaskResumeAll();
 }

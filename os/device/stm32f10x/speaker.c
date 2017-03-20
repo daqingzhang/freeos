@@ -22,7 +22,7 @@ void speaker_init(void)
 	// speaker output low level
 	GPIO_WriteBit(SPK_GPIOX,pin,Bit_RESET);
 
-	rprintf("%s done!\r\n",__func__);
+	rprintf("%s done!\n",__func__);
 }
 
 void speaker_on(void)
@@ -52,6 +52,6 @@ void speaker_beep(int times, unsigned int dly)
 
 void speaker_test(void)
 {
-	rprintf("%s start!\r\n",__func__);
+	rprintf("%s start!\n",__func__);
 	speaker_beep(10000, 200);
 }
